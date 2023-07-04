@@ -1,0 +1,70 @@
+{
+	"compiler": {
+		"version": "0.8.2+commit.661d1103"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "data",
+						"type": "bytes"
+					}
+				],
+				"name": "tokenFallback",
+				"outputs": [],
+				"stateMutability": "pure",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"notice": "ERC223 token compatible contract",
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Tokens.sol": "ERC223ReceivingContract"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Tokens.sol": {
+			"keccak256": "0x836f6849c73c58588062bc670f3fb05b0b1558bcae2ebf5fcaa49aa892a33d71",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://dfc4c4e9529b7931363e5ed52b3d92a1db473d4d4f315544a7f91e39e9f1d02e",
+				"dweb:/ipfs/QmVQpwWE7ZGCRRwcL7ShEkhrp9gywgEevXAQSi44pAr5Fg"
+			]
+		}
+	},
+	"version": 1
+}

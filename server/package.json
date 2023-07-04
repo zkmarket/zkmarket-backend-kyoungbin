@@ -1,0 +1,32 @@
+{
+  "name": "azeroth-trade-dev",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rm -f ./src/snarks/proof/*.json",
+    "nodemon": "rm -f ./db/proof/*json && mysql -u root -p --database=trade_db < ./src/db/trade_db.sql && nodemon --experimental-specifier-resolution=node index.js --watch ./src"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ethersproject/keccak256": "^5.7.0",
+    "@ethersproject/strings": "^5.7.0",
+    "axios": "^1.4.0",
+    "bluebird": "^3.7.2",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "ffi-napi": "^4.0.3",
+    "lodash": "^4.17.21",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.4.2",
+    "nodemon": "^2.0.22",
+    "path": "^0.12.7",
+    "ref-napi": "^3.0.3",
+    "web3": "^1.8.1",
+    "web3-eth-contract": "^4.0.1"
+  }
+}

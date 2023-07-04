@@ -1,0 +1,45 @@
+{
+	"compiler": {
+		"version": "0.8.2+commit.661d1103"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Groth16AltBN128.sol": "Groth16AltBN128"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Groth16AltBN128.sol": {
+			"keccak256": "0x0397fa4a897ae75e5d26f118076367419ebe52a1621989049e08f5ed04261fa3",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://ed94e3b834dd51dc285314399c6f94fd2ed0d8b8a687f2b08f5d1064d9b45039",
+				"dweb:/ipfs/QmbJCVACjNUgqEK2pDF2StjrAC83Ujd3Zq9yuBVkHwX5DQ"
+			]
+		}
+	},
+	"version": 1
+}

@@ -1,0 +1,452 @@
+{
+	"compiler": {
+		"version": "0.8.2+commit.661d1103"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "mk_depth",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "token",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "vk",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "hash_type",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "message",
+						"type": "bytes32"
+					}
+				],
+				"name": "LogDebug",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "root",
+						"type": "uint256"
+					}
+				],
+				"name": "LogDebugTree",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "root",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "nullifier",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "com",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "addr",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "c_0",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "c_1",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "c_2",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "c_3_0",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "c_3_1",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "c_3_2",
+						"type": "uint256"
+					}
+				],
+				"name": "LogTrans",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "pk",
+						"type": "bytes32"
+					}
+				],
+				"name": "LogUserAddr",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "index",
+						"type": "uint256"
+					}
+				],
+				"name": "_computeMerklePath",
+				"outputs": [
+					{
+						"internalType": "bytes32[]",
+						"name": "",
+						"type": "bytes32[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "_nodes",
+				"outputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getAPK",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "addr",
+						"type": "bytes32"
+					}
+				],
+				"name": "getCiphertext",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "index",
+						"type": "uint256"
+					}
+				],
+				"name": "getMerklePath",
+				"outputs": [
+					{
+						"internalType": "uint256[]",
+						"name": "",
+						"type": "uint256[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getRootTop",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "apk",
+						"type": "uint256"
+					}
+				],
+				"name": "registerAuditor",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "addr",
+						"type": "bytes32"
+					}
+				],
+				"name": "registerUser",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "data",
+						"type": "bytes"
+					}
+				],
+				"name": "tokenFallback",
+				"outputs": [],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256[]",
+						"name": "proof",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "rt",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "nf",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256[3]",
+						"name": "pk",
+						"type": "uint256[3]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "cm",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256[2]",
+						"name": "ct",
+						"type": "uint256[2]"
+					},
+					{
+						"internalType": "uint256[2]",
+						"name": "values",
+						"type": "uint256[2]"
+					},
+					{
+						"internalType": "uint256[6]",
+						"name": "CT",
+						"type": "uint256[6]"
+					},
+					{
+						"internalType": "address",
+						"name": "toEoA",
+						"type": "address"
+					}
+				],
+				"name": "zkTransfer",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"notice": "Instance of AltBN128MixerBase implementing the Groth16 verifier for the alt-bn128 pairing.",
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Groth16AltBN128Mixer.sol": "Groth16AltBN128Mixer"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/AltBN128MixerBase.sol": {
+			"keccak256": "0x48d8192191f8b9e2b81cf4267fd746a50cdee8591b57b8a6052266ff78b84190",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://6b127a8ba952936006f4493694cde669f809f904211d710af682d344b3463fe5",
+				"dweb:/ipfs/QmcZKp2Za9bRTBx3D6dBb22mzoq79JRUFkgqWoFnUihBNK"
+			]
+		},
+		"contracts/BaseMerkleTree.sol": {
+			"keccak256": "0xe4680463a9ef39b1eb67c89e3fddda27aaee8b40dc4387e83321578b6bd372f8",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://9515268fe946df92935efcea96ecc1092dc5bcb2abfc316235850fc7d1972bbc",
+				"dweb:/ipfs/QmdWrFLMPWzxj8ZM3gtr4mv9cKLpFADzTr8hKp5ytvWkE8"
+			]
+		},
+		"contracts/Groth16AltBN128.sol": {
+			"keccak256": "0x0397fa4a897ae75e5d26f118076367419ebe52a1621989049e08f5ed04261fa3",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://ed94e3b834dd51dc285314399c6f94fd2ed0d8b8a687f2b08f5d1064d9b45039",
+				"dweb:/ipfs/QmbJCVACjNUgqEK2pDF2StjrAC83Ujd3Zq9yuBVkHwX5DQ"
+			]
+		},
+		"contracts/Groth16AltBN128Mixer.sol": {
+			"keccak256": "0x2cc0aee95aab241da5ab1cba6dba3d067d82ac0efb35bd39ab5f984546743e1c",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://e7a1365a4e22d47c39aed6c3827c51f650135f0cb807ec5e2651e25f37648480",
+				"dweb:/ipfs/QmZJrF5KdqApVgRVggz3sXRLA3gEBFtttYsH9YtwLPdGAt"
+			]
+		},
+		"contracts/MiMC7.sol": {
+			"keccak256": "0x6699f15f4ecd06e19e2263c96367069906f77d78b734833cea21e0448e07ea29",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://aa4a3451df04180559d204a9669de06fd147533a27edfa2a4051539488836497",
+				"dweb:/ipfs/QmZUNUrNDPATwMPW5cDQ2qh7cMVyrW5xaGedsf5Mrex2PW"
+			]
+		},
+		"contracts/Poseidon2.sol": {
+			"keccak256": "0x9cbb010c32c06c3f2df8026117346b7eb73d91538dc9c0ef48b2626ee1081647",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://b7a931fef1443f2b4cc3bfb3c63239e6afc9bff87147fa53dbb8941830112506",
+				"dweb:/ipfs/QmTp3mKNJpgYkLy5iKVaFTTemwNX16cv5MnHZ2fGmaL1FP"
+			]
+		},
+		"contracts/Tokens.sol": {
+			"keccak256": "0x836f6849c73c58588062bc670f3fb05b0b1558bcae2ebf5fcaa49aa892a33d71",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://dfc4c4e9529b7931363e5ed52b3d92a1db473d4d4f315544a7f91e39e9f1d02e",
+				"dweb:/ipfs/QmVQpwWE7ZGCRRwcL7ShEkhrp9gywgEevXAQSi44pAr5Fg"
+			]
+		},
+		"contracts/sha.sol": {
+			"keccak256": "0xcf2e04104fc9a4c8491d93074c287779f910d14ca5b026548ff41e4890a7d899",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://e180ceb0ff33dde7f6145b3ec258a8606acad11a64b577f41e2e6e409befef0d",
+				"dweb:/ipfs/Qmbq6Qz6tnyekFBaXbGsTFopupyRbrE4q3XdshCqNMZ2ow"
+			]
+		},
+		"contracts/zklayBase.sol": {
+			"keccak256": "0xa8af0551e5dc7c1ce449911f78ff54886d54ca1278b885a15e5c1ae43b619a47",
+			"license": "LGPL-3.0+",
+			"urls": [
+				"bzz-raw://4ed681ec86c37ee480a5baa1cd3e633062a447d3cac0ba3b97af82ba0a432dc4",
+				"dweb:/ipfs/QmetYET9McKBopRH2YYvW9mD7p88xCfmKoqA1zKMdR2E5Z"
+			]
+		}
+	},
+	"version": 1
+}
