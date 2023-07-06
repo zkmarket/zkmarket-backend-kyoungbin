@@ -5,7 +5,7 @@ import { uploadController, uploadMiddleware } from '../controllers/imageUplodaCo
 
 const dataRouter = express.Router();
 
-dataRouter.post('/register', registDataController)
+dataRouter.post('/register', uploadMiddleware.single('image'), registDataController)
 
 dataRouter.post('/uploadImg', uploadMiddleware.single('image'), uploadController)
 

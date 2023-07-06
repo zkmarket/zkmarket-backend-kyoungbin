@@ -19,6 +19,7 @@ class sCT {
     }
 
     toJson() { return JSON.stringify(this); }
+    toList() { return [ this.r, this.ct ]; }
 
     static fromJson(sCTJson) {
         let dataJson = JSON.parse(sCTJson);
@@ -193,6 +194,7 @@ class publicKeyEncryption {
      * @returns 
      */
     Enc(upk, ...msg) {
+        console.log(this.prime)
         let r = math.randomFieldElement(constants.SUBGROUP_ORDER);
         let k = math.randomFieldElement(this.prime);
         let c0 = curve.basePointMul(r).toString(16);

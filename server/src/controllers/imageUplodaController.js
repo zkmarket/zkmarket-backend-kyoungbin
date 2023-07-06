@@ -11,20 +11,10 @@ export const uploadMiddleware = multer({
             cb(null, dbPath+'image/')
         },
         filename : (req, file, cb) => {
-            console.log(req.body)
-            console.log(file, typeof file)
-            const fileName = _.get(req.body, 'h_ct').replace('0x', '') + path.extname(_.get(file, 'originalname'))
-            console.log(fileName)
-            cb(null, fileName)
+            cb(null, _.get(file, 'originalname'))
         },
     }),
     fileFilter : (req, file, cb) => {
-        console.log("request : ",req)
-        console.log(req.file, file)
-        console.log(req.body, JSON.stringify(req.body))
-        if(_.get(req.body, 'h_ct') === undefined ){
-            return cb(new Error('h_ct is undefined'), null)
-        }
         return cb(null, true)
     },
 })

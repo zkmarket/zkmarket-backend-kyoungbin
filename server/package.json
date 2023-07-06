@@ -5,7 +5,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "clean": "rm -f ./src/snarks/proof/*.json",
+    "test" : "node --experimental-specifier-resolution=node ",
+    "clean": "rm -f ./db/proof/*.json && rm -f ./db/data/*json && rm -f ./db/image/* && touch ./db/image/.gitkeep",
     "nodemon": "rm -f ./db/proof/*json && mysql -u root -p --database=trade_db < ./src/db/trade_db.sql && nodemon --experimental-specifier-resolution=node index.js --watch ./src"
   },
   "keywords": [],

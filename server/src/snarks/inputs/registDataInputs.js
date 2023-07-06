@@ -1,3 +1,4 @@
+import fs from 'fs'
 import Config from "../../config";
 import mimc from "../../crypto/mimc";
 import types from "../../utils/types";
@@ -8,17 +9,29 @@ import FileSystem, { rawFileToBigIntString } from "../../utils/file";
 
 
 export default class RegistDataSnarkInputs {
-    data   = null;
-    pk_own = null;
-    h_k    = null;
-    h_ct   = null;
-    id_data= null;
-    CT_data= null;
-    CT_r   = null;
+    data     = null;
+    addr_peer= null;
+    h_k      = null;
+    h_ct     = null;
+    CT_data  = null;
+    CT_r     = null;
     dataEncKey = null;
 
     constructor(EC_TYPE=Config.EC_TYPE){ 
         this.curveParam = CurveParam(EC_TYPE);
+    }
+
+    uploadDataFromFilePath(filePath){
+        try {
+            const utf8buf = fs.readFileSync(filePath);
+            const hexStr = rawFileToBigIntString(utf8buf).padEnd(
+                Config.textFileByteLen*2, "0"
+            );
+            this.uploadDataFromHexStr(hexStr);
+        } catch (error) {
+            console.log(error)
+            return error
+        }
     }
 
     uploadDataFromStr(str){
@@ -45,18 +58,8 @@ export default class RegistDataSnarkInputs {
         this.data = data;
     }
 
-    uploadPkOwnFromPrivKey(privKey) {
-        const mimc7 = new mimc.MiMC7();
-        this.uploadPkOwn(mimc7.hash(privKey));
-    }
-
-    uploadPkOwn(pk_own) {
-        console.log("pk_own : ", pk_own);
-        if(types.isBigIntFormat(pk_own)){
-            this.pk_own = pk_own;
-            return;
-        }
-        throw new Error("privKey format err");
+    uploadAddrPeer(addr_peer){
+        this.addr_peer = addr_peer;
     }
 
     uploadsCTdataAndEncKey(sCTdata, dataEncKey){
@@ -78,14 +81,13 @@ export default class RegistDataSnarkInputs {
     makeSnarkInput(){
         if (
             this.dataEncKey == null || 
-            this.CT_data == null || 
-            this.pk_own == null ||
-            this.data ==null
+            this.CT_data    == null || 
+            this.addr_peer  == null ||
+            this.data       == null
         ){ throw new Error("data is not prepared"); }
         const mimc7 = new mimc.MiMC7();
-        this.h_k    = mimc7.hash(this.pk_own, this.dataEncKey);
+        this.h_k    = mimc7.hash(this.addr_peer, this.dataEncKey);
         this.h_ct   = this.hashArr(this.CT_data);
-        this.id_data= this.hashArr(this.data);
     }
 
     getsCtData(){
@@ -100,10 +102,6 @@ export default class RegistDataSnarkInputs {
         return this.h_ct;
     }
     
-    getIdData(){
-        return this.id_data;
-    }
-
     gethK(){
         return this.h_k;
     }
@@ -111,7 +109,7 @@ export default class RegistDataSnarkInputs {
     toSnarkInputFormat(){
         if( this.dataEncKey == null || 
             this.CT_data == null ||
-            this.pk_own == null ||
+            this.addr_peer == null ||
             this.data ==null
         ){ throw new Error("param is not prepared"); }
         
@@ -119,8 +117,8 @@ export default class RegistDataSnarkInputs {
             "pk_own"    : this.pk_own,
             "h_k"       : this.h_k,
             "h_ct"      : this.h_ct,
-            "id_data"   : this.id_data,
             "dataEnckey": this.dataEncKey,
+            "addr_peer" : this.addr_peer,
             "data"      : {},
             "CT_data"   : {},
             "CT_r"      : this.CT_r,
@@ -138,14 +136,12 @@ export default class RegistDataSnarkInputs {
         if(
             this.pk_own == null ||
             this.h_ct   == null ||
-            this.h_k    == null ||
-            this.id_data== null 
+            this.h_k    == null 
         ){ return null;}
         const verifySnarkInput = {
             "pk_own"    : this.pk_own,
             "h_k"       : this.h_k,
             "h_ct"      : this.h_ct,
-            "id_data"   : this.id_data,
         };
         return JSON.stringify(verifySnarkInput);
     }
