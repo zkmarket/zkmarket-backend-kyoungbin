@@ -13,14 +13,9 @@ pragma solidity ^0.8.2;
 /// This implementation stores all leaves and nodes, skipping those that have
 /// not been populated yet. The final entry in each layer stores that layer's
 /// default value.
-abstract contract BaseMerkleTree
-{
+abstract contract BaseMerkleTree {
     // Depth of the merkle tree
     uint256 internal _DEPTH;
-
-    // hash types are defined as below
-    // 1: MiMC7, 2: SHA256, 3: Poseidon
-    uint256 internal _HASH_TYPE; 
 
     // Number of leaves
     uint256 internal _MAX_NUM_LEAVES;
@@ -34,32 +29,37 @@ abstract contract BaseMerkleTree
 
     mapping(uint256 => bytes32) public _nodes;
 
-    bytes32[] internal _default_values; 
+    bytes32[] internal _defaultValues;
 
     // Number of leaves populated in `nodes`.
-    uint256 internal _num_leaves;
+    uint256 internal _numLeaves;
 
     // Debug only
     event LogDebug(bytes32 message);
 
     /// Constructor
-    constructor(uint256 tree_depth, uint256 hash_type) {
-        _HASH_TYPE = hash_type;
-        _DEPTH = tree_depth;
+    constructor(uint256 depth) {
+        _DEPTH = depth;
         _MAX_NUM_LEAVES = 2**_DEPTH;
         _MAX_NUM_NODES = (_MAX_NUM_LEAVES * 2) - 1;
-        _default_values = new bytes32[](_DEPTH);
+        _defaultValues = new bytes32[](_DEPTH);
         _initDefaultValues();
     }
 
     function _initDefaultValues() private {
-        _default_values[0] = _DEFAULT_NODE_VALUE;
-        for(uint i =1;i<_DEPTH;i++){
+        _defaultValues[0] = _DEFAULT_NODE_VALUE;
+        for (uint256 i = 1; i < _DEPTH; i++) {
             // Store default values for each layer
-            _default_values[i] = _hash(_default_values[i-1],_default_values[i-1]);
+            _defaultValues[i] = _hash(
+                _defaultValues[i - 1],
+                _defaultValues[i - 1]
+            );
         }
         // Initialize default root
-        _nodes[0] = _hash(_default_values[_DEPTH - 1], _default_values[_DEPTH - 1]);
+        _nodes[0] = _hash(
+            _defaultValues[_DEPTH - 1],
+            _defaultValues[_DEPTH - 1]
+        );
     }
 
     /// Appends a commitment to the tree, and returns its address
@@ -67,15 +67,15 @@ abstract contract BaseMerkleTree
         // If this require fails => the merkle tree is full, we can't append
         // leaves anymore.
         require(
-            _num_leaves < _MAX_NUM_LEAVES,
+            _numLeaves < _MAX_NUM_LEAVES,
             "BaseMerkleTree: Cannot append anymore"
         );
 
         // Address of the next leaf is the current number of leaves (before
         // insertion).  Compute the next index in the full set of nodes, and
         // write.
-        uint256 next_address = _num_leaves;
-        ++_num_leaves;
+        uint256 next_address = _numLeaves;
+        ++_numLeaves;
         uint256 next_entry_idx = (_MAX_NUM_LEAVES - 1) + next_address;
 
         _nodes[next_entry_idx] = commitment;
@@ -83,19 +83,21 @@ abstract contract BaseMerkleTree
 
     /// Abstract hash function to be supplied by a concrete implementation of
     /// this class.
-    function _hash(bytes32 left, bytes32 right) internal virtual returns (bytes32);
+    function _hash(bytes32 left, bytes32 right)
+        internal
+        virtual
+        returns (bytes32);
 
-    function _recomputeRoot(uint num_new_leaves) internal returns (bytes32) {
+    function _recomputeRoot(uint256 num_new_leaves) internal returns (bytes32) {
         // Assume `num_new_leaves` have been written into the leaf slots.
         // Update any affected nodes in the tree, up to the root, using the
         // default values for any missing nodes.
 
-        uint256 end_idx = _num_leaves;
-        uint256 start_idx = _num_leaves - num_new_leaves;
+        uint256 end_idx = _numLeaves;
+        uint256 start_idx = _numLeaves - num_new_leaves;
 
         for (uint256 i = 0; i < _DEPTH; i++) {
-            (start_idx, end_idx) =
-                _recomputeParentLayer(i, start_idx, end_idx);
+            (start_idx, end_idx) = _recomputeParentLayer(i, start_idx, end_idx);
         }
 
         return _nodes[0];
@@ -120,10 +122,7 @@ abstract contract BaseMerkleTree
         uint256 child_layer,
         uint256 child_start_idx,
         uint256 child_end_idx
-    )
-        private
-        returns (uint256, uint256)
-    {
+    ) private returns (uint256, uint256) {
         uint256 child_layer_start = 2**(_DEPTH - child_layer) - 1;
 
         // Start at the right and iterate left, so we only execute the
@@ -131,8 +130,8 @@ abstract contract BaseMerkleTree
         // smallest value of child_left_idx at which we should recompute the
         // parent node hash.
 
-        uint256 child_left_idx_rend =
-            child_layer_start + (child_start_idx & _MASK_LS_BIT);
+        uint256 child_left_idx_rend = child_layer_start +
+            (child_start_idx & _MASK_LS_BIT);
 
         // If child_end_idx is odd, it is the RIGHT of a computation we need
         // to make. Do the computation using the default value, and move to
@@ -140,11 +139,15 @@ abstract contract BaseMerkleTree
         // Otherwise, we have a fully populated pair.
 
         uint256 child_left_idx;
-        if ((child_end_idx & 1) != 0) { // odd
+        if ((child_end_idx & 1) != 0) {
+            // odd
             child_left_idx = child_layer_start + child_end_idx - 1;
-            _nodes[(child_left_idx - 1) / 2] =
-                _hash(_nodes[child_left_idx], _default_values[child_layer]);
-        } else { //  even
+            _nodes[(child_left_idx - 1) / 2] = _hash(
+                _nodes[child_left_idx],
+                _defaultValues[child_layer]
+            );
+        } else {
+            //  even
             child_left_idx = child_layer_start + child_end_idx;
         }
 
@@ -153,22 +156,27 @@ abstract contract BaseMerkleTree
 
         while (child_left_idx > child_left_idx_rend) {
             child_left_idx = child_left_idx - 2;
-            _nodes[(child_left_idx - 1) / 2] =
-                _hash(_nodes[child_left_idx], _nodes[child_left_idx + 1]);
+            _nodes[(child_left_idx - 1) / 2] = _hash(
+                _nodes[child_left_idx],
+                _nodes[child_left_idx + 1]
+            );
         }
 
         return (child_start_idx / 2, (child_end_idx + 1) / 2);
     }
 
-    function _computeMerklePath(uint256 index) public view returns (bytes32[] memory) {
+    function _computeMerklePath(uint256 index)
+        public
+        view
+        returns (bytes32[] memory)
+    {
         // Given an index into leaves of a Merkle tree, compute the path to the root.
         bytes32[] memory merkle_path = new bytes32[](_DEPTH);
 
         for (uint256 i = 0; i < _DEPTH; i++) {
             if (index & 0x01 != 0) {
                 merkle_path[i] = _getNode(index - 1, i);
-            }
-            else {
+            } else {
                 merkle_path[i] = _getNode(index + 1, i);
             }
             index >>= 1;
@@ -177,11 +185,14 @@ abstract contract BaseMerkleTree
         return merkle_path;
     }
 
-    function _getNode(uint256 index, uint256 layer) private view returns (bytes32) {
+    function _getNode(uint256 index, uint256 layer)
+        private
+        view
+        returns (bytes32)
+    {
         if (_nodes[2**(_DEPTH - layer) - 1 + index] == _DEFAULT_NODE_VALUE) {
-            return _default_values[layer];
+            return _defaultValues[layer];
         }
         return _nodes[2**(_DEPTH - layer) - 1 + index];
     }
-   
 }

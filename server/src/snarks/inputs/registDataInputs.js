@@ -1,11 +1,12 @@
 import fs from 'fs'
 import Config from "../../config";
 import mimc from "../../crypto/mimc";
-import types from "../../utils/types";
+import types, { hexStrToDec } from "../../utils/types";
 import math from "../../utils/math";
 import Encryption from "../../crypto/encryption";
 import CurveParam from "../../crypto/curveParam";
 import FileSystem, { rawFileToBigIntString } from "../../utils/file";
+import { hexToDec } from '../../contracts/utils';
 
 
 export default class RegistDataSnarkInputs {
@@ -114,7 +115,6 @@ export default class RegistDataSnarkInputs {
         ){ throw new Error("param is not prepared"); }
         
         const snarkInput = {
-            "pk_own"    : this.pk_own,
             "h_k"       : this.h_k,
             "h_ct"      : this.h_ct,
             "dataEnckey": this.dataEncKey,
@@ -131,19 +131,44 @@ export default class RegistDataSnarkInputs {
         return JSON.stringify(snarkInput);
     }
 
-    //pk_own, h_k, h_ct, id_data; 
+    // Input of smart contract
     toSnarkVerifyFormat(){
         if(
-            this.pk_own == null ||
+            this.addr_peer == null ||
             this.h_ct   == null ||
             this.h_k    == null 
         ){ return null;}
-        const verifySnarkInput = {
-            "pk_own"    : this.pk_own,
-            "h_k"       : this.h_k,
-            "h_ct"      : this.h_ct,
-        };
-        return JSON.stringify(verifySnarkInput);
+        
+        let snarkInputs = ['1']
+        
+        // if(this.addr_peer.slice(0,2) != '0x'){
+        //     snarkInputs.push('0x' + this.addr_peer);
+        // }
+        // else{
+        //     snarkInputs.push(this.addr_peer);
+        // }
+
+        
+
+        // if(this.h_k.slice(0,2) != '0x'){
+        //     snarkInputs.push('0x' + this.h_k);
+        // }
+        // else{
+        //     snarkInputs.push(this.h_k);
+        // }
+
+        // if(this.h_ct.slice(0,2) != '0x'){
+        //     snarkInputs.push('0x' + this.h_ct);
+        // }
+        // else{
+        //     snarkInputs.push(this.h_ct);
+        // }
+
+        snarkInputs.push(hexToDec(this.addr_peer))
+        snarkInputs.push(hexToDec(this.h_k))
+        snarkInputs.push(hexToDec(this.h_ct))
+
+        return snarkInputs;
     }
 
     hashArr(arr){

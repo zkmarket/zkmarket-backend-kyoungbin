@@ -51,7 +51,7 @@ export default class tradeContract extends Web3Interface {
             console.log('invalid proof length');
             return false;
         }
-        if (inputs.length != 5) {
+        if (inputs.length != 4) {
             console.log('invalid inputs length');
             return false;
         }

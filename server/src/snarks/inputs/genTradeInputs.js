@@ -1,7 +1,7 @@
 import fs from 'fs'
 import Config from "../../config";
 import mimc from "../../crypto/mimc";
-import types from "../../utils/types";
+import types, { hexStrToDec, hexToInt } from "../../utils/types";
 import math from "../../utils/math";
 import Encryption from "../../crypto/encryption";
 import CurveParam from "../../crypto/curveParam";
@@ -64,7 +64,7 @@ export default class GenTradeSnarkInputs{
         // console.log('fee : ', fee.toString(10))
 
         console.log('before ENA : ', symEnc.Dec(this.ENA))
-        console.log('after ENA_ : ', symEnc.Dec(this.ENA_))    
+        console.log('after ENA_ : ', symEnc.Dec(this.ENA_), hexToInt(symEnc.Dec(this.ENA)) - hexToInt(symEnc.Dec(this.ENA_)))    
 
         const [cm, rand] = CoinCommitment.genCm(
             this.addr_peer,
@@ -74,10 +74,11 @@ export default class GenTradeSnarkInputs{
             this.fee_del,
             this.h_k
         )
+        
         this.cm_del = cm.cm_del
         this.cm_own = cm.cm_own
         this.r_cm = rand
-
+        
         const [pct, r_enc, k_enc]= pubEnc.Enc(
             new Object({ pkEnc : this.pk_enc_peer }), 
             this.pk_enc_cons,
@@ -105,7 +106,7 @@ export default class GenTradeSnarkInputs{
         return JSON.stringify(json, null, 2)
     }
 
-    toContractInput(){
+    toSnarkVerifyFormat(){
         let contractInputs = [
             "1",
             this.g_r, 

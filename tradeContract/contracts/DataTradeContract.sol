@@ -3,13 +3,14 @@ pragma solidity ^0.8.2;
 
 import "./Groth16AltBN128.sol";
 import "./MiMC7.sol";
+import "./ZklayBase.sol";
 
-contract DataTradeContractBackup {
+contract DataTradeContract is ZklayBase {
 
-    struct ENA {
-        uint256 r;
-        uint256 ct;
-    }
+    // struct ENA {
+    //     uint256 r;
+    //     uint256 ct;
+    // }
 
     struct userInfo {
         uint256 addr;
@@ -42,13 +43,13 @@ contract DataTradeContractBackup {
     mapping(uint256 => bool) waitTradeList;
 
     // registData SNARK Proof verify input num
-    uint256 private constant REGISTDATA_NUM_INPUTS = 5;
+    uint256 internal constant REGISTDATA_NUM_INPUTS = 4;
 
     // GenTrade SNARK Proof verify input num
-    uint256 private constant ORDER_NUM_INPUTS = 17;
+    uint256 internal constant ORDER_NUM_INPUTS = 14;
 
     // AcceptTrade SNARK Proof verify input num
-    uint256 private constant ACCEPT_NUM_INPUTS = 10;
+    uint256 internal constant ACCEPT_NUM_INPUTS = 8;
 
     // registDAta SNARK vk
     uint256[] private registData_vk;
@@ -69,11 +70,17 @@ contract DataTradeContractBackup {
     constructor(
         uint256[] memory _registData_vk,
         uint256[] memory _orderData_vk,
-        uint256[] memory _acceptOrder_vk
-    ){
+        uint256[] memory _acceptOrder_vk,
+        uint256 depth,
+        uint256[] memory vk,
+        uint256[] memory vkNft,
+        uint256 price,
+        address toReceiveFee
+    ) ZklayBase(depth, vk, vkNft, price, toReceiveFee) {
         registData_vk = _registData_vk;
         orderData_vk  = _orderData_vk;
         acceptOrder_vk = _acceptOrder_vk;
+        // registUser(pk_own_del, pk_enc_del);
     }
 
     function registUserByDelegator(
@@ -84,8 +91,8 @@ contract DataTradeContractBackup {
         public
         payable
     {   
-        bytes32 _addr = MiMC7._hash(bytes32(pk_own), bytes32(pk_enc));
-        _registUser(uint256(_addr), pk_own, pk_enc, eoa);
+        // bytes32 _addr = MiMC7._hash(bytes32(pk_own), bytes32(pk_enc));
+        _registUser(_addressMap[eoa].Addr, pk_own, pk_enc, eoa);
     }
 
     function registUser(
@@ -95,8 +102,8 @@ contract DataTradeContractBackup {
         public
         payable
     {   
-        bytes32 _addr = MiMC7._hash(bytes32(pk_own), bytes32(pk_enc));
-        _registUser(uint256(_addr), pk_own, pk_enc, msg.sender);
+        // bytes32 _addr = MiMC7._hash(bytes32(pk_own), bytes32(pk_enc));
+        _registUser(_addressMap[msg.sender].Addr, pk_own, pk_enc, msg.sender);
     }
 
     function _registUser(
@@ -108,6 +115,7 @@ contract DataTradeContractBackup {
         public
         payable
     {   
+        require(_addrList[addr], "Azeroth User deos not exist");
         require(!_addr_list[_userInfoMap[eoa].addr], "msg.sender already exist");
         require(!_addr_list[addr], "User already exist");
 
@@ -131,14 +139,18 @@ contract DataTradeContractBackup {
     }
 
     /*
-        inputs : [ constant(1) , pk_own , h_k , h_ct , id_data ]
+        --- inputs ---
+        0 : 1 
+        1 : addr_peer
+        2 : h_k
+        3 : h_ct
+        --------------
     */
     function registData(
         uint256[] memory proof,
-        uint256[REGISTDATA_NUM_INPUTS] memory inputs
+        uint256[] memory inputs
     ) 
-        public 
-        payable 
+        public  
         returns(bool)
     {   
         // check input length
@@ -167,30 +179,38 @@ contract DataTradeContractBackup {
 
 
     /**
-        1, 
-        c0, c1   
-        cm_own 
-        cm_del 
-        ENA_r, ENA_c 
-        ENA'_r, ENA'_c 
-        fee_del, fee_own 
-        CT : (size : 6)
+        0 : 1 
+        1 : c0 
+        2 : c1
+        3 : cm_own 
+        4 : cm_del 
+        5 : ENA_r 
+        6 : ENA_c 
+        7 : ENA'_r 
+        8 : ENA'_c 
+        9 : CT[0]
+        10: CT[1]
+        11: CT[2]
+        12: CT[3]
+        13: CT[4]
      */
     function orderData(
         uint256[] memory proof,
-        uint256[ORDER_NUM_INPUTS] memory inputs
+        uint256[] memory inputs,
+        address tokenAddress
     )
         public
         payable
         returns(bool)
     {
-        uint256 fee = inputs[9] + inputs[10];
-        require(msg.value == fee, "invalid fee");
-
         require( inputs.length == ORDER_NUM_INPUTS, "invalid Input length");
 
         require( !waitTradeList[inputs[3]], "already exist cm_own");
         require( !waitTradeList[inputs[4]], "already exist cm_del");
+        
+        // check ENA is valid 블록체인에 기록된 ENA 와 동일한지 확인
+        require(_ENA[tokenAddress][_addressMap[msg.sender].Addr].r == inputs[5], "invalid ENA(r)");
+        require(_ENA[tokenAddress][_addressMap[msg.sender].Addr].ct == inputs[6], "invalid ENA(ct)");
 
         uint256[] memory input_values = new uint256[](ORDER_NUM_INPUTS);
         for (uint256 i = 0 ; i < ORDER_NUM_INPUTS; i++) {
@@ -208,17 +228,19 @@ contract DataTradeContractBackup {
         _order[orderNumber].cm_pear = inputs[3];
         _order[orderNumber].cm_del = inputs[4];
         
-        // emit log
-        uint256[] memory c2 = new uint256[](6);
-        for (uint256 i=0; i<6; i++){
-            c2[i] = input_values[i+11];
-        } 
-        emit logOrder(
-            msg.sender,
-            input_values[1],
-            input_values[2],
-            c2
-        );
+        _ENA[tokenAddress][_addressMap[msg.sender].Addr] = ENA(inputs[7], inputs[8]);
+
+        // // emit log
+        // uint256[] memory c2 = new uint256[](6);
+        // for (uint256 i=0; i<6; i++){
+        //     c2[i] = input_values[i+11];
+        // } 
+        // emit logOrder(
+        //     msg.sender,
+        //     input_values[1],
+        //     input_values[2],
+        //     c2
+        // );
 
         return true;
     }
@@ -240,37 +262,42 @@ contract DataTradeContractBackup {
     }
 
     /**
-        1
-        cm_del  
-        cm_own 
-		encryptedDataEncKey size : 3 
-        fee_del, fee_own,
-        pk_own_del, pk_own_peer
+        0 : 1
+        1 : cm_del  
+        2 : cm_own
+        3 : cm_del_azeroth
+        4 : cm_peer_azeroth
+        5 : ecryptedDataEncKey[0] g^r
+        6 : ecryptedDataEncKey[1] k* pk^r
+        7 : ecryptedDataEncKey[2] enc_k(msg)
      */
     function acceptOrder(
         uint256[] memory proof,
-        uint256[ACCEPT_NUM_INPUTS] memory inputs
+        uint256[] memory inputs
     )
         public
-        payable
         returns(bool)
-    {   
+    {
         require(inputs.length == ACCEPT_NUM_INPUTS, "invalid Inputs length");
+
+        // check cm
+        require(waitTradeList[inputs[1]], "cm0 no exist");
+        require(waitTradeList[inputs[2]], "cm1 no exist");
 
         uint256[] memory input_values = new uint256[](ACCEPT_NUM_INPUTS);
         for (uint256 i = 0 ; i < ACCEPT_NUM_INPUTS; i++) {
             input_values[i] = inputs[i];
         }
-        require(waitTradeList[input_values[1]], "cm0 no exist");
-        require(waitTradeList[input_values[2]], "cm1 no exist");
-        require( Groth16AltBN128._verify(acceptOrder_vk, proof, input_values), "invalid proof");        
+        require( Groth16AltBN128._verify(acceptOrder_vk, proof, input_values), "invalid proof");
 
-        waitTradeList[input_values[1]] = false;
-        waitTradeList[input_values[2]] = false;
+        waitTradeList[inputs[1]] = false;
+        waitTradeList[inputs[2]] = false;
 
-        payable(_eoaMap[input_values[8]]).transfer(input_values[6]);
-        payable(_eoaMap[input_values[9]]).transfer(input_values[7]);
-
+        _insert(bytes32(inputs[3]));
+        _insert(bytes32(inputs[4]));
+        uint256 new_merkle_root = uint256(_recomputeRoot(1));
+        _addRoot(new_merkle_root);
+        
         return true;
     }
 
@@ -282,5 +309,25 @@ contract DataTradeContractBackup {
         returns (bool,bool)
     {
         return (waitTradeList[_order[orderNumber].cm_pear], waitTradeList[_order[orderNumber].cm_del]);
+    }
+
+    function _hash(bytes32 left, bytes32 right)
+        internal
+        pure
+        override
+        returns (bytes32)
+    {
+        return MiMC7._hash(left, right);
+    }
+
+    function _verifyZKProof(
+        uint256[] memory proof,
+        uint256[] memory inputs,
+        bool isNft
+    ) internal override returns (bool) {
+        if (isNft) {
+            return Groth16AltBN128._verify(_vkNft, proof, inputs);
+        }
+        return Groth16AltBN128._verify(_vk, proof, inputs);
     }
 }

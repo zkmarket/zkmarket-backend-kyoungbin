@@ -7,7 +7,8 @@
   "scripts": {
     "test" : "node --experimental-specifier-resolution=node ",
     "clean": "rm -f ./db/proof/*.json && rm -f ./db/data/*json && rm -f ./db/image/* && touch ./db/image/.gitkeep",
-    "nodemon": "rm -f ./db/proof/*json && mysql -u root -p --database=trade_db < ./src/db/trade_db.sql && nodemon --experimental-specifier-resolution=node index.js --watch ./src"
+    "nodemon": "rm -f ./db/proof/*json && mysql -u root -p --database=trade_db < ./src/db/trade_db.sql && nodemon --experimental-specifier-resolution=node index.js --watch ./src",
+    "snark" : "cp -f ~/libsnark-optimization/lib/darwin_release/lib/libSnark.dylib ./src/snarks/js-libsnark-opt/ && cp -f ~/libsnark-optimization/test/*k.* ./src/snarks/crs"
   },
   "keywords": [],
   "author": "",

@@ -2,13 +2,18 @@ import _ from "lodash";
 
 import RegistDataSnarkInputs from "../snarks/inputs/registDataInputs";
 import AcceptTradeSnarkInputs from "../snarks/inputs/acceptTradeInputs";
-import  GenTradeSnarkInputs  from "../snarks/inputs/genTradeInputs";
+import GenTradeSnarkInputs  from "../snarks/inputs/genTradeInputs";
 import LibSnark from "../snarks/libsnark";
 import Encryption from "../crypto/encryption";
 import mimc from "../crypto/mimc";
 import math from "../utils/math";
 import Curve from "../crypto/curve";
 import types, {hexToInt} from "../utils/types";
+
+import Ganache from "../contracts/ganahce";
+import { getContractFormatProof } from "../contracts/utils";
+import tradeContract from "../contracts/contract";
+import Config from "../config";
 
 
 console.log('=================== REGIST DATA SNARK INPUTS ===================')
@@ -36,13 +41,13 @@ const symEnc = new Encryption.symmetricKeyEncryption(k_ena);
 const fee_peer = '10000'
 const fee_del  = '1000'
 
-let beforeBalance = BigInt(4000000) + BigInt(hexToInt(fee_del)) + BigInt(hexToInt(fee_peer))
+let beforeBalance = BigInt(4000000) + hexToInt(fee_del) + hexToInt(fee_peer)
 let afterBalance  = BigInt(4000000) 
 
 const ENA = symEnc.Enc(beforeBalance.toString(16))
 const ENA_= symEnc.Enc(afterBalance.toString(16))
 
-console.log("ENA : ", ENA, hexToInt(symEnc.Dec(ENA)), (BigInt(fee_del) + BigInt(fee_peer)).toString(10))
+console.log("ENA : ", ENA, hexToInt(symEnc.Dec(ENA)), (hexToInt(fee_del) + hexToInt(fee_peer)).toString(10))
 console.log("ENA_ : ", ENA_, hexToInt(symEnc.Dec(ENA_)))
 
 // process.exit(0)
@@ -58,12 +63,36 @@ registDataSnarkInputs.encryptData();
 
 registDataSnarkInputs.makeSnarkInput();
 
+console.log(registDataSnarkInputs.toSnarkInputFormat())
+
+console.log(registDataSnarkInputs.toSnarkVerifyFormat())
+    
+// process.exit(0)
 
 console.log('=================== REGIST DATA SNARK PROVER ===================')
 
-// const registDataProver = new LibSnark("RegistData");
+const registDataProver = new LibSnark("RegistData");
+const registDataVerifier = new LibSnark("RegistData", true);
 
-// registDataProver.uploadInputAndRunProof(registDataSnarkInputs.toSnarkInputFormat(), '_' + registDataSnarkInputs.gethCt());
+registDataProver.uploadInputAndRunProof(registDataSnarkInputs.toSnarkInputFormat(), '_' + registDataSnarkInputs.gethCt());
+
+registDataVerifier.verifyProof(
+    registDataSnarkInputs.toSnarkInputFormat(),
+    '_' + registDataSnarkInputs.gethCt()
+)
+
+console.log(getContractFormatProof(registDataSnarkInputs.gethCt(), 'RegistData'))
+
+const contracts =  new tradeCㅊontract(Config.testProvider,'0xc23d2f275db2c19293187522501917393bf5324f'.toLocaleLowerCase())
+
+const receipt = await contracts.registData(
+    getContractFormatProof(registDataSnarkInputs.gethCt(), registDataProver.CircuitType),
+    registDataSnarkInputs.toSnarkVerifyFormat(),
+    Ganache.getAddress(3),
+    Ganache.getPrivateKey(3)
+)
+console.log(receipt)
+process.exit(0)
 
 console.log('=================== GEN TRADE SNARK INPUTS ===================')
 
@@ -87,8 +116,11 @@ console.log('=================== GEN TRADE SNARK PROVER ===================')
 const genTradeProver = new LibSnark("GenTrade");
 genTradeProver.uploadInputAndRunProof(genTradeSnarkInputs.toSnarkInputFormat(), '_' + genTradeSnarkInputs.gethk());
 
-console.log('=================== ACCEPT TRADE SNARK INPUTS ===================')
 
+
+
+
+console.log('=================== ACCEPT TRADE SNARK INPUTS ===================')
 
 const acceptTradeSnarkInputs = new AcceptTradeSnarkInputs(
     addr_del,

@@ -8,7 +8,7 @@ export function getContractFormatProof(proofId, circuitType){
     return proofFlat(proofJson);
 }
 
-export function getContractFormatVk(circuitName='RegistData'){
+export function getContractFormatVk(circuitName='RegistData', digit=10){
     const vkJson = getVk(circuitName);
     let tmp = [];
     for (let i = 0; i < 2; i++) {
