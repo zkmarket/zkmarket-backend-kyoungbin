@@ -6,6 +6,7 @@ import math from "../../utils/math";
 import Encryption from "../../crypto/encryption";
 import CurveParam from "../../crypto/curveParam";
 import FileSystem, { rawFileToBigIntString } from "../../utils/file";
+import { hexToDec } from '../../contracts/utils';
 
 export default class AcceptTradeSnarkInputs{
     /**
@@ -52,7 +53,7 @@ export default class AcceptTradeSnarkInputs{
         this.cm_peer_azeroth = mimc7.hash(addr_peer, fee_peer, o_peer)
         this.cm_del_azeroth  = mimc7.hash(addr_del, fee_del, o_del)
         
-        console.log(pk_enc_cons, dataEncKey)
+        // console.log(pk_enc_cons, dataEncKey)
         const[pct, r, k] = pubEnc.Enc(
             {pkEnc : pk_enc_cons},
             dataEncKey
@@ -71,12 +72,27 @@ export default class AcceptTradeSnarkInputs{
         return this.toJson();
     }
 
+    /**
+        0 : 1
+        1 : cm_del  
+        2 : cm_own
+        3 : cm_del_azeroth
+        4 : cm_peer_azeroth
+        5 : ecryptedDataEncKey[0] g^r
+        6 : ecryptedDataEncKey[1] k* pk^r
+        7 : ecryptedDataEncKey[2] enc_k(msg)
+     */
     toSnarkVerifyFormat() {
-        return JSON.stringify({
-            'cm_del' : this.cm_del,
-            'cm_own' : this.cm_own,
-            'ecryptedDataEncKey' : this.ecryptedDataEncKey
-        }, null, 2)
+        return [
+            hexToDec('0x01'),
+            hexToDec(this.cm_del),
+            hexToDec(this.cm_peer),
+            hexToDec(this.cm_del_azeroth),
+            hexToDec(this.cm_peer_azeroth),
+            hexToDec(this.ecryptedDataEncKey[0]),
+            hexToDec(this.ecryptedDataEncKey[1]),
+            hexToDec(this.ecryptedDataEncKey[2])
+        ]
     }   
     
     gethk(){

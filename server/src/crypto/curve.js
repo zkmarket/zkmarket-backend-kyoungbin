@@ -150,7 +150,7 @@ export function basePointMul(exp, curveOption){
     curve.checkPointOnCurve(bp);
     let result = curve.computeScalarMul(bp, exp);
     curve.checkPointOnCurve(result);
-    return result.x;
+    return result;
 }
 
 const Curve = {

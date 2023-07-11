@@ -10,6 +10,12 @@ export default class tradeContract extends Web3Interface {
         this.contractAddress= contractAddress;
     }
 
+    async registerAzerothUser(
+
+    ) {
+        
+    }
+
     async registUser(
         pk_own,
         pk_enc,

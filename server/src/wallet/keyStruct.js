@@ -5,17 +5,30 @@ import Curve from '../crypto/curve.js';
 import mimc from '../crypto/mimc.js';
 import types from '../utils/types.js';
 
+class zkMarketKey {
+    /**
+     * @param {BigInt} sk : sk of Azeroth
+     */
+    constructor(sk){
+        const mimc7 = new mimc.MiMC7()
+        this.skEnc = mimc7.hash(sk.toString(16), types.asciiToHex('sk_enc'))
+        this.pkEnc = Curve.basePointMul(types.hexToInt(this.skEnc))
+    }
+}
 
 export default class UserKey {
-    // ena : addr
-    constructor({ena, pkOwn, pkEnc}, skEnc, skOwn){
+    // ena : addr of azeroth hash( pk_own || pk_enc )
+    // sk  : sk_enc sk_own of azeroth
+    // skEncZkMarket : sk enc of data trade hash( sk || asciiToHex('sk') )
+    // pkEncZkMarket : 
+    constructor({ena, pkOwn, pkEnc}, sk){
         this.pk = {
             ena : ena,
             pkOwn : pkOwn,
             pkEnc : pkEnc
         };
-        this.skEnc = skEnc;
-        this.skOwn = skOwn;
+        this.sk = sk;
+        // this.marketKey = new zkMarketKey(sk);
     }
 
     toJson(){
@@ -23,8 +36,7 @@ export default class UserKey {
             ena   : this.pk.ena,
             pkOwn : this.pk.pkOwn,
             pkEnc : this.pk.pkEnc,
-            skEnc : this.skEnc,
-            skOwn : this.skOwn,
+            sk      : this.sk,
         }, null, 2);
     }
 
@@ -44,59 +56,45 @@ export default class UserKey {
                 pkOwn   : _.get(userKey, "pkOwn"),
                 pkEnc   : _.get(userKey, "pkEnc")
             },
-            _.get(userKey, "skEnc"),
-            _.get(userKey, "skOwn"),
+            _.get(userKey, "sk"),
         );
     }
 
     static keyGen() {
         const mimc7 = new mimc.MiMC7();
 
-        const sk_own = math.randomFieldElement(constants.SUBGROUP_ORDER).toString(16);
-        const pk_own = mimc7.hash(
-            sk_own, types.asciiToHex('pk_own') 
-        )
-        const sk_enc = mimc7.hash(
-            sk_own, types.asciiToHex('sk_enc')
-        )
+        const sk = math.randomFieldElement(constants.SUBGROUP_ORDER);
         const userPublicKey = {
-            ena : null,
-            pkOwn : pk_own,
-            pkEnc : Curve.basePointMul(types.hexToInt(sk_enc)).toString(16)
+            ena: null,
+            pkOwn: mimc7.hash(sk.toString(16)),
+            pkEnc: Curve.basePointMul(sk),
         };
-        // azerothFront code userPublicKey.pkEnc.toString(16)
-        userPublicKey.ena =  mimc7.hash(userPublicKey.pkOwn, userPublicKey.pkEnc);
+        userPublicKey.ena = mimc7.hash(
+            userPublicKey.pkOwn,
+            userPublicKey.pkEnc.x.toString(16),
+            userPublicKey.pkEnc.y.toString(16)
+        );
 
-        return new UserKey(userPublicKey, sk_enc, sk_own);
+        return new UserKey(userPublicKey, sk.toString(16));
     }
 
-    static recoverFromUserSk(sk_own){
+    static recoverFromUserSk(sk) {
         const mimc7 = new mimc.MiMC7();
 
-        // 왜 string -> bigint -> string으로 구현했을까
-        const skBigInt = types.hexToInt(sk_own);
-        const pk_own = mimc7.hash(
-            sk_own, types.asciiToHex('pk_own') 
-        )
-        const sk_enc = mimc7.hash(
-            sk_own, types.asciiToHex('sk_enc')
-        )
-
+        const skBigIntType = types.hexToInt(sk);
+        console.log(skBigIntType, skBigIntType.toString(16))
         const userPublicKey = {
-            ena : null,
-            pkOwn : pk_own,
-            pkEnc : Curve.basePointMul(types.hexToInt(sk_enc)).toString(16)
+            ena: null,
+            pkOwn: mimc7.hash(skBigIntType.toString(16)),
+            pkEnc: Curve.basePointMul(skBigIntType),
         };
+        userPublicKey.ena = mimc7.hash(
+            userPublicKey.pkOwn,
+            userPublicKey.pkEnc.x.toString(16),
+            userPublicKey.pkEnc.y.toString(16)
+        );
 
-        // azerothFront code userPublicKey.pkEnc.toString(16)
-        userPublicKey.ena =  mimc7.hash(userPublicKey.pkOwn, userPublicKey.pkEnc);
-
-        return userPublicKey;
-    }
-
-    getLoginTk() {
-        const mimc7 = new mimc.MiMC7();
-        return mimc7.hash(this.pk.pkOwn, types.asciiToHex('login'));
+        return new upk(userPublicKey);
     }
 }
 

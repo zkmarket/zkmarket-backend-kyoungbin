@@ -1,11 +1,6 @@
-import fs from 'fs'
-import Config from "../../config";
-import mimc from "../../crypto/mimc";
-import types, { hexStrToDec, hexToInt } from "../../utils/types";
-import math from "../../utils/math";
+import _ from 'lodash'
+import { hexStrToDec, hexToInt } from "../../utils/types";
 import Encryption from "../../crypto/encryption";
-import CurveParam from "../../crypto/curveParam";
-import FileSystem, { rawFileToBigIntString } from "../../utils/file";
 import CoinCommitment from './cm';
 
 export default class GenTradeSnarkInputs{
@@ -88,6 +83,7 @@ export default class GenTradeSnarkInputs{
             this.h_k
         )
         const pctList = pct.toList();
+        console.log('g_r : ',(pctList[0]))
         this.g_r = pctList[0];
         this.c1  = pctList[1];
         this.CT_cons = pctList.slice(2);
@@ -116,13 +112,13 @@ export default class GenTradeSnarkInputs{
         ]
         contractInputs = _.union(contractInputs, this.ENA.toList())
         contractInputs = _.union(contractInputs, this.ENA_.toList())
-        contractInputs = _.union(contractInputs, [this.fee_del, this.fee_own])
+        // contractInputs = _.union(contractInputs, [this.fee_del, this.fee_own])
         contractInputs = _.union(contractInputs, this.CT_cons)
 
         for(let i=0; i<contractInputs.length; i++){
             contractInputs[i] = hexStrToDec(contractInputs[i])
         }
-        console.log("contractInputs : ", contractInputs)
+        // console.log("contractInputs : ", contractInputs)
         return contractInputs;
     }
 

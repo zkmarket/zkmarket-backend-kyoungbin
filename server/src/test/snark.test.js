@@ -83,7 +83,7 @@ registDataVerifier.verifyProof(
 
 console.log(getContractFormatProof(registDataSnarkInputs.gethCt(), 'RegistData'))
 
-const contracts =  new tradeCㅊontract(Config.testProvider,'0xc23d2f275db2c19293187522501917393bf5324f'.toLocaleLowerCase())
+const contracts =  new tradeContract(Config.testProvider,'0xc23d2f275db2c19293187522501917393bf5324f'.toLocaleLowerCase())
 
 const receipt = await contracts.registData(
     getContractFormatProof(registDataSnarkInputs.gethCt(), registDataProver.CircuitType),
@@ -92,7 +92,7 @@ const receipt = await contracts.registData(
     Ganache.getPrivateKey(3)
 )
 console.log(receipt)
-process.exit(0)
+// process.exit(0)
 
 console.log('=================== GEN TRADE SNARK INPUTS ===================')
 

@@ -194,10 +194,10 @@ class publicKeyEncryption {
      * @returns 
      */
     Enc(upk, ...msg) {
-        console.log(this.prime)
+        // console.log(this.prime)
         let r = math.randomFieldElement(constants.SUBGROUP_ORDER);
         let k = math.randomFieldElement(this.prime);
-        let c0 = curve.basePointMul(r).toString(16);
+        let c0 = curve.basePointMul(r).x.toString(16);
         let c1 = math.mod(k * curve.multscalar(types.hexToInt(upk.pkEnc), r), this.prime).toString(16);
         let c2 = (() => {
             let ret = [];
