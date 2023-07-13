@@ -179,6 +179,35 @@ class pCT {
     }
 }
 
+class AzerothpCT {
+    /**
+     *
+     * @param {AffinePoint}      c0      The ciphertext G^r
+     * @param {AffinePoint}      c1      The ciphertext k*(pk_1)^r
+     * @param {AffinePoint}      c2      The ciphertext k*(pk_2)^r
+     * @param {string[]}    c3      The ciphertext SE.Enc_k(msg)
+     */
+    constructor(c0, c1, c2, c3) {
+        this.c0 = (c0.toHexArray) ? c0 : new curve.AffinePoint(c0.x, c0.y);
+        this.c1 = (c1.toHexArray) ? c1 : new curve.AffinePoint(c1.x, c1.y);
+        this.c2 = (c2.toHexArray) ? c2 : new curve.AffinePoint(c2.x, c2.y);
+        this.c3 = c3;
+    }
+    toJson() { return JSON.stringify(this); }
+
+    static fromJson(pCTJson) {
+        let dataJson = JSON.parse(pCTJson);
+
+        return new pCT(
+            dataJson.c3
+        );
+    }
+
+    toList() {
+        return [...this.c0.toHexArray(), ...this.c1.toHexArray(), ...this.c2.toHexArray(), ...this.c3];
+    }
+}
+
 class publicKeyEncryption {
     constructor(){
         this.EC_TYPE = Config.EC_TYPE;
@@ -215,6 +244,42 @@ class publicKeyEncryption {
         return [new pCT( c0, c1, c2 ), r, k];
     }
 
+     /**
+     *
+     * @param {string}     apk     Auditor's public key
+     * @param {{ena: string, pkOwn: string, pkEnc: string}}      upk     User's public key
+     * @param  {...string}          msg     The plaintext | hexadecimal string type
+     * @returns
+     */
+    AzerothEnc(apk, upk, ...msg) {
+        let Curve = new curve.MontgomeryCurve(new CurveParam(Config.EC_TYPE));
+        let r = math.randomFieldElement(this.prime);
+        let k = math.randomFieldElement(this.prime);
+        let curveK = curve.basePointMul(k);
+
+        let curvePk = Curve.computeScalarMul(upk.pkEnc, r);
+        let curveApk = Curve.computeScalarMul(apk, r);
+
+        let c0 = curve.basePointMul(r);
+        let c1 = Curve.addAffinePoint(curveK, curvePk);
+        let c2 = Curve.addAffinePoint(curveK, curveApk);
+
+        let c3 = (() => {
+            let ret = [];
+            let mimc7 = new mimc.MiMC7();
+            for (const [i, e] of msg.entries()) {
+                let hashInput = (curveK.x + BigInt(i.toString(10))).toString(16);
+                let hashed = types.hexToInt(mimc7.hash(hashInput));
+                ret.push(
+                    math.mod(types.hexToInt(e) + hashed, this.prime).toString(16)
+                );
+            }
+            console.log("Azeroth ENC : ", ret)
+            return ret;
+        })();
+        r = r.toString(16); k = curveK;
+        return [new AzerothpCT(c0, c1, c2, c3), r, k];
+    }
 
     /**
      * 

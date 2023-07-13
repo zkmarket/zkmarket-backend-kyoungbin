@@ -1,8 +1,6 @@
-import fs from 'fs'
+import _ from 'lodash'
 import Config from "../../config";
 import mimc from "../../crypto/mimc";
-import types from "../../utils/types";
-import math from "../../utils/math";
 import Encryption from "../../crypto/encryption";
 import CurveParam from "../../crypto/curveParam";
 import FileSystem, { rawFileToBigIntString } from "../../utils/file";
@@ -47,11 +45,11 @@ export default class AcceptTradeSnarkInputs{
         this.cm_peer = mimc7.hash(addr_peer, r_cm, fee_peer, this.h_k, pk_enc_cons);
         this.cm_del = mimc7.hash(addr_del, r_cm, fee_del, this.h_k, pk_enc_cons);
 
-        const o_peer = mimc7.hash( r_cm, fee_peer, this.h_k, pk_enc_cons);
-        const o_del  = mimc7.hash( r_cm, fee_del, this.h_k, pk_enc_cons);
+        this.o_peer = mimc7.hash( r_cm, fee_peer, this.h_k, pk_enc_cons);
+        this.o_del  = mimc7.hash( r_cm, fee_del, this.h_k, pk_enc_cons);
 
-        this.cm_peer_azeroth = mimc7.hash(addr_peer, fee_peer, o_peer)
-        this.cm_del_azeroth  = mimc7.hash(addr_del, fee_del, o_del)
+        this.cm_peer_azeroth = mimc7.hash(addr_peer, fee_peer, this.o_peer)
+        this.cm_del_azeroth  = mimc7.hash(addr_del, fee_del, this.o_del)
         
         // console.log(pk_enc_cons, dataEncKey)
         const[pct, r, k] = pubEnc.Enc(
@@ -69,7 +67,9 @@ export default class AcceptTradeSnarkInputs{
     }
     
     toSnarkInputFormat(){
-        return this.toJson();
+        const tmp = JSON.parse(this.toJson())
+        return JSON.stringify(_.omit(tmp, ['o_peer', 'o_del']))
+        // return this.toJson();
     }
 
     /**

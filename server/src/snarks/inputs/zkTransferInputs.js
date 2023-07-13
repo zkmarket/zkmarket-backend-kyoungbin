@@ -1,3 +1,5 @@
+import types from "../../utils/types";
+
 export default class ZkTransferSnarkInputs {
     /**
      *
@@ -34,6 +36,7 @@ export default class ZkTransferSnarkInputs {
     }
 
     toSnarkInputFormat() {
+        console.log("this.ciphertexts.newpCT : ", this.ciphertexts.newpCT)
         const input = {
             'CT': {
                 '0': this.ciphertexts.newpCT.c3[0],
@@ -79,7 +82,7 @@ export default class ZkTransferSnarkInputs {
             };
         }
 
-        return JSON.stringify(input);
+        return JSON.stringify(input, null, 2);
     }
 
     static fromJson(libsnarkInputJson) {
@@ -97,3 +100,5 @@ export default class ZkTransferSnarkInputs {
 
     }
 }
+
+

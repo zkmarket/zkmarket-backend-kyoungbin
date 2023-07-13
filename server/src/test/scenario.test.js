@@ -20,17 +20,22 @@ import tradeContract from "../contracts/contract"
 import Ganache from '../contracts/ganahce'
 import sendTransaction from './sendTransaction'
 import UserKey from '../wallet/keyStruct'
-import { addPrefixAndPadHex, addPrefixHex } from '../utils/types'
+import { addPrefixAndPadHex, addPrefixHex, decStrToHex } from '../utils/types'
 import Encryption from '../crypto/encryption'
 import snarks from '../snarks'
 import { getContractFormatProof } from '../contracts/utils'
 import math from '../utils/math'
+import mimc from '../crypto/mimc'
+import mtree from '../contracts/mtree'
+import { decArrToHexArr } from './zkTransfer'
 
 const ZERO_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000'
+const auditorKey = UserKey.keyGen(); const auditorIdx = 3;
 
 console.log(' =================== DEPLOY CONTRACT ===================')
 
 const web3 = new Web3(Config.testProvider)
+const mimc7 = new mimc.MiMC7();
 
 const testParameter = JSON.parse(
     fs.readFileSync(
@@ -61,7 +66,11 @@ const deployCall = new web3.eth.Contract(abi).deploy({
     data: bytecode,
     arguments: args,
 });
-let receipt = await sendTransaction(web3, deployCall, '10000000');
+let receipt = await sendTransaction(
+    web3, deployCall, '10000000', 
+    Ganache.getAddress(auditorIdx), 
+    Ganache.getPrivateKey(auditorIdx)
+);
 
 console.log('deploy contract : ', receipt.status)
 
@@ -75,8 +84,15 @@ console.log('\n =================== REGISTER AUDITOR ===================')
 
 receipt = await sendTransaction(
     web3,
-    contracts.instance.methods.registerAuditor(testParameter['apk']),
-    '10000000'
+    contracts.instance.methods.registerAuditor(
+        [
+            '0x' + auditorKey.pk.pkEnc.x.toString(16),
+            '0x' + auditorKey.pk.pkEnc.y.toString(16)
+        ]
+    ),
+    '10000000',
+    Ganache.getAddress(auditorIdx),
+    Ganache.getPrivateKey(auditorIdx)
 )
 console.log("register auditor : ", receipt.status)
 
@@ -142,7 +158,7 @@ const ENAbalance = '0x' + BigInt('100000000000').toString(16)
 
 const ReaderEnaEnc = new Encryption.symmetricKeyEncryption(readerKey.sk)
 const ENA = ReaderEnaEnc.Enc(ENAbalance)
-const ENA_= ReaderEnaEnc.Enc('0x0')
+const ENA_= ReaderEnaEnc.Enc('0x00')
 // console.log("Reader's ENA : ", ENA, addPrefixHex(ReaderEnaEnc.Dec(ENA)) )
 
 receipt = await sendTransaction(
@@ -237,24 +253,117 @@ const acceptTradeSnarkInputs = new snarks.acceptTradeInput(
 snarks.acceptTradeProver.uploadInputAndRunProof(acceptTradeSnarkInputs.toSnarkInputFormat(), '_' + acceptTradeSnarkInputs.gethk());
 
 console.log('accepTrade Inputs : ', acceptTradeSnarkInputs.toSnarkVerifyFormat())
-console.log('gas : ',await contracts.instance.methods.acceptOrder(
-    getContractFormatProof(acceptTradeSnarkInputs.gethk(), snarks.acceptTradeProver.CircuitType),
-    acceptTradeSnarkInputs.toSnarkVerifyFormat(),
-).estimateGas())
+console.log('gas : ',
+    await contracts.instance.methods.acceptOrder(
+        getContractFormatProof(acceptTradeSnarkInputs.gethk(), snarks.acceptTradeProver.CircuitType),
+        acceptTradeSnarkInputs.toSnarkVerifyFormat()
+    ).estimateGas()
+)
 
-try {
-    receipt = await sendTransaction(
-        web3,
-        contracts.instance.methods.acceptOrder(
-            getContractFormatProof(acceptTradeSnarkInputs.gethk(), snarks.acceptTradeProver.CircuitType),
-            acceptTradeSnarkInputs.toSnarkVerifyFormat(),
-        ),
-        '100000000',
-        Ganache.getAddress(delegateServerIdx),
-        Ganache.getPrivateKey(delegateServerIdx)
-    )
-} catch (error) {
-    console.log(error)
+receipt = await sendTransaction(
+    web3,
+    contracts.instance.methods.acceptOrder(
+        getContractFormatProof(acceptTradeSnarkInputs.gethk(), snarks.acceptTradeProver.CircuitType),
+        acceptTradeSnarkInputs.toSnarkVerifyFormat()
+    ),
+    '100000000',
+    Ganache.getAddress(delegateServerIdx),
+    Ganache.getPrivateKey(delegateServerIdx)
+)
+console.log(receipt)
+
+
+
+console.log("=================== SERVER ZKTRANSFER TO OWN ACCOUNT ===================")
+console.log(" DELEGATE SERVER TRANSFER CM TO OWN ENA ")
+
+const cmDelIdx = 1
+const oldCmBal = BigInt('10000000000').toString(16)
+
+const penc = new Encryption.publicKeyEncryption()
+const senc = new Encryption.symmetricKeyEncryption(delegateServerKey.sk)
+const ENAServerNew = senc.Enc(oldCmBal)
+
+const newOpen = math.randomFieldElement().toString(16)
+const [newpCT, newR, newK] = penc.AzerothEnc(
+    auditorKey.pk.pkEnc,
+    delegateServerKey.pk,
+    ...[newOpen, '00', delegateServerKey.pk.ena],
+)
+const sn = mimc7.hash(
+    acceptTradeSnarkInputs.cm_del_azeroth, 
+    delegateServerKey.sk
+);
+
+
+const zklayKey = {
+    auditor : {
+        pk : auditorKey.pk.pkEnc,
+    },
+    sender : {
+        pk : delegateServerKey.pk,
+        sk : delegateServerKey.sk,
+    },
+    receiver : {
+        pk : delegateServerKey.pk,
+    }
 }
+
+const ciphertexts = {
+    oldsCT: {
+        r : "0",
+        ct: "0"
+    },
+    newsCT: ENAServerNew,
+    newpCT: newpCT,
+}
+
+const opens = {
+    oldOpen: acceptTradeSnarkInputs.o_peer,
+    newOpen: newOpen,
+};
+
+const balance = {
+    pocket: {
+        privBal  : '00',
+        pubInBal : '00',
+        pubOutBal: oldCmBal,
+    },
+    oldCmBal: oldCmBal,
+};
+
+const aux = {
+    newR: newR,
+    newK: newK,
+};
+
+const commitments = {
+    oldCm: acceptTradeSnarkInputs.cm_del_azeroth,
+    newCm: mimc7.hash(newOpen, '00', delegateServerKey.pk.ena),
+};
+
+const oldRt = decStrToHex(await contracts.contractMethod.getRootTop().call());
+const intermediateHashes = await contracts.instance.methods.getMerklePath(cmDelIdx.toString()).call();
+
+const mtData = mtree(oldRt, decArrToHexArr(intermediateHashes), cmDelIdx.toString());
+
+const zkTransferInput = new snarks.zkTransferInput(
+    zklayKey,
+    ciphertexts,
+    mtData,
+    sn,
+    commitments,
+    opens,
+    balance,
+    aux,
+)
+
+console.log(zkTransferInput.toSnarkInputFormat())
+
+snarks.zkTransferProver.uploadInputAndRunProof(zkTransferInput.toSnarkInputFormat(), '_' + zkTransferInput.commitments.oldCm);
+
+
+
+
 
 
