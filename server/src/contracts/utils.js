@@ -30,7 +30,6 @@ export function getContractFormatVk(circuitName='RegistData', digit=10){
       tmp.push(hexToDec(vkJson['ABC'][Number.parseInt(i / 2)][i % 2]))
     }
     const vk = tmp;
-    console.log(circuitName, 'vk len : ', vk.length);
     return vk;
 }
 
@@ -65,6 +64,7 @@ export function proofFlat(proofJson) {
         for (let i = 0; i < 2; i++) {
             tmp.push(hexToDec(proofJson['a'][i]));
         }
+        //reverse
         for (let i = 0; i < 4; i++) {
             tmp.push(hexToDec(proofJson['b'][Number.parseInt(i / 2)][(i + 1) % 2]));
         }

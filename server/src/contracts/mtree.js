@@ -2,7 +2,8 @@ export class Mtree {
     constructor(
         root,
         intermediateHashes,
-        index) {
+        index
+    ) {
         this.root = root;
         this.intermediateHashes = intermediateHashes;
         this.index = index;

@@ -48,9 +48,12 @@ export default class AcceptTradeSnarkInputs{
         this.o_peer = mimc7.hash( r_cm, fee_peer, this.h_k, pk_enc_cons);
         this.o_del  = mimc7.hash( r_cm, fee_del, this.h_k, pk_enc_cons);
 
-        this.cm_peer_azeroth = mimc7.hash(addr_peer, fee_peer, this.o_peer)
-        this.cm_del_azeroth  = mimc7.hash(addr_del, fee_del, this.o_del)
-        
+        // cm_azeroth = Hash = (o || balance || addr)
+        // this.cm_peer_azeroth = mimc7.hash(addr_peer, fee_peer, this.o_peer)
+        // this.cm_del_azeroth  = mimc7.hash(addr_del, fee_del, this.o_del)
+        this.cm_peer_azeroth = mimc7.hash(this.o_peer, fee_peer, addr_peer)
+        this.cm_del_azeroth  = mimc7.hash(this.o_del, fee_del, addr_del)
+
         // console.log(pk_enc_cons, dataEncKey)
         const[pct, r, k] = pubEnc.Enc(
             {pkEnc : pk_enc_cons},

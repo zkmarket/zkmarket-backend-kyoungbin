@@ -20,10 +20,10 @@ import tradeContract from "../contracts/contract"
 import Ganache from '../contracts/ganahce'
 import sendTransaction from './sendTransaction'
 import UserKey from '../wallet/keyStruct'
-import { addPrefixAndPadHex, addPrefixHex, decStrToHex } from '../utils/types'
+import types, { addPrefixAndPadHex, addPrefixHex, decStrToHex } from '../utils/types'
 import Encryption from '../crypto/encryption'
 import snarks from '../snarks'
-import { getContractFormatProof } from '../contracts/utils'
+import { getContractFormatProof, getContractFormatVk } from '../contracts/utils'
 import math from '../utils/math'
 import mimc from '../crypto/mimc'
 import mtree from '../contracts/mtree'
@@ -56,10 +56,11 @@ const args = [
     testParameter.vk_genTrade,
     testParameter.vk_acceptTrade,
     32, 
-    testParameter.vk, 
+    getContractFormatVk('ZKlay'), 
+    // testParameter.vk,
     testParameter.vk_nft, 
-    web3.utils.toHex((0.10 * web3.utils.unitMap.ether)), 
-    Ganache.getAddress()
+    web3.utils.toHex((0.00 * web3.utils.unitMap.ether)), 
+    Ganache.getAddress(4)
 ];
 
 const deployCall = new web3.eth.Contract(abi).deploy({
@@ -200,7 +201,7 @@ registDataSnarkInputs.makeSnarkInput();
 //     Ganache.getPrivateKey(writerIdx)
 // )
 
-console.log("register data : ", receipt.status)
+// console.log("register data : ", receipt.status)
 
 
 
@@ -277,7 +278,7 @@ console.log(receipt)
 console.log("=================== SERVER ZKTRANSFER TO OWN ACCOUNT ===================")
 console.log(" DELEGATE SERVER TRANSFER CM TO OWN ENA ")
 
-const cmDelIdx = 1
+const cmDelIdx = 0
 const oldCmBal = BigInt('10000000000').toString(16)
 
 const penc = new Encryption.publicKeyEncryption()
@@ -319,7 +320,7 @@ const ciphertexts = {
 }
 
 const opens = {
-    oldOpen: acceptTradeSnarkInputs.o_peer,
+    oldOpen: acceptTradeSnarkInputs.o_del,
     newOpen: newOpen,
 };
 
@@ -327,7 +328,7 @@ const balance = {
     pocket: {
         privBal  : '00',
         pubInBal : '00',
-        pubOutBal: oldCmBal,
+        pubOutBal: '00',
     },
     oldCmBal: oldCmBal,
 };
@@ -345,7 +346,17 @@ const commitments = {
 const oldRt = decStrToHex(await contracts.contractMethod.getRootTop().call());
 const intermediateHashes = await contracts.instance.methods.getMerklePath(cmDelIdx.toString()).call();
 
-const mtData = mtree(oldRt, decArrToHexArr(intermediateHashes), cmDelIdx.toString());
+const mtData = mtree(oldRt, decArrToHexArr(intermediateHashes), cmDelIdx);
+console.log("mtData : ", mtData)
+
+let tmp = acceptTradeSnarkInputs.cm_del_azeroth
+for(let i=0 ;i<32 ;i++){
+    tmp = mimc7.hash(tmp, intermediateHashes[i])
+}
+
+console.log('calc root : ', tmp, )
+console.log("cm_azeroth_del : ", acceptTradeSnarkInputs.cm_del_azeroth)
+console.log('cm_azeroth_peer:  ', acceptTradeSnarkInputs.cm_peer_azeroth, '\n', mimc7.hash( acceptTradeSnarkInputs.cm_peer_azeroth), '\n\n\n')
 
 const zkTransferInput = new snarks.zkTransferInput(
     zklayKey,
@@ -361,6 +372,24 @@ const zkTransferInput = new snarks.zkTransferInput(
 console.log(zkTransferInput.toSnarkInputFormat())
 
 snarks.zkTransferProver.uploadInputAndRunProof(zkTransferInput.toSnarkInputFormat(), '_' + zkTransferInput.commitments.oldCm);
+
+const zklayContractInput = zkTransferInput.toSnarkVerifyFormat(
+    Ganache.getAddress(delegateServerIdx),
+    ZERO_TOKEN_ADDRESS
+)
+// console.log([1,2].length)
+console.log(zklayContractInput, zklayContractInput[1].length, testParameter.vk.length)
+console.log(...zklayContractInput)
+receipt = await sendTransaction(
+    web3,
+    contracts.instance.methods.zkTransfer(
+        ... zklayContractInput
+    ),
+    '100000000',
+    Ganache.getAddress(delegateServerIdx),
+    Ganache.getPrivateKey(delegateServerIdx)
+)
+
 
 
 

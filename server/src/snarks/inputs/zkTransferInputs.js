@@ -1,3 +1,4 @@
+import { getContractFormatProof } from "../../contracts/utils";
 import types from "../../utils/types";
 
 export default class ZkTransferSnarkInputs {
@@ -97,7 +98,34 @@ export default class ZkTransferSnarkInputs {
             dataJson.balance,
             dataJson.aux,
         );
+    }
 
+    toSnarkVerifyFormat(toEoA, tokenAddress) {
+        let hexProof = []
+        getContractFormatProof(this.commitments.oldCm, 'ZKlay').forEach((e) =>{
+            hexProof.push(types.addPrefixAndPadHex(BigInt(e).toString(16)))
+        })
+        const args = [
+            hexProof,
+            [
+            types.addPrefixAndPadHex(this.merkleTreeData.root),
+            types.addPrefixAndPadHex(this.nullifier),
+            types.addPrefixAndPadHex(this.keys.sender.pk.ena),
+            types.addPrefixAndPadHex(this.keys.sender.pk.pkOwn),
+            ...types.addPrefixAndPadHexFromArray([
+                types.addPrefixAndPadHex(this.keys.sender.pk.pkEnc.x.toString(16)),
+                types.addPrefixAndPadHex(this.keys.sender.pk.pkEnc.y.toString(16)),
+            ]),
+            types.addPrefixAndPadHex(this.commitments.newCm),
+            ...types.addPrefixAndPadHexFromArray(Object.values(this.ciphertexts.newsCT)),
+            types.addPrefixAndPadHex(this.balance.pocket.pubInBal),
+            types.addPrefixAndPadHex(this.balance.pocket.pubOutBal),
+            ...types.addPrefixAndPadHexFromArray(this.ciphertexts.newpCT.toList()),
+            ],
+            toEoA,
+            tokenAddress,
+        ]
+        return args
     }
 }
 

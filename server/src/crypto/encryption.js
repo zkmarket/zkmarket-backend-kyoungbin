@@ -253,8 +253,8 @@ class publicKeyEncryption {
      */
     AzerothEnc(apk, upk, ...msg) {
         let Curve = new curve.MontgomeryCurve(new CurveParam(Config.EC_TYPE));
-        let r = math.randomFieldElement(this.prime);
-        let k = math.randomFieldElement(this.prime);
+        let r = math.randomFieldElement(constants.SUBGROUP_ORDER);
+        let k = math.randomFieldElement(constants.SUBGROUP_ORDER);
         let curveK = curve.basePointMul(k);
 
         let curvePk = Curve.computeScalarMul(upk.pkEnc, r);
