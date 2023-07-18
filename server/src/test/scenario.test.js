@@ -278,26 +278,26 @@ console.log(receipt)
 console.log("=================== SERVER ZKTRANSFER TO OWN ACCOUNT ===================")
 console.log(" DELEGATE SERVER TRANSFER CM TO OWN ENA ")
 
-const cmDelIdx = 0
-const oldCmBal = BigInt('10000000000').toString(16)
+let cmDelIdx = 0
+let oldCmBal = BigInt('10000000000').toString(16)
 
-const penc = new Encryption.publicKeyEncryption()
-const senc = new Encryption.symmetricKeyEncryption(delegateServerKey.sk)
-const ENAServerNew = senc.Enc(oldCmBal)
+let penc = new Encryption.publicKeyEncryption()
+let senc = new Encryption.symmetricKeyEncryption(delegateServerKey.sk)
+let ENAServerNew = senc.Enc(oldCmBal)
 
-const newOpen = math.randomFieldElement().toString(16)
-const [newpCT, newR, newK] = penc.AzerothEnc(
+let newOpen = math.randomFieldElement().toString(16)
+let [newpCT, newR, newK] = penc.AzerothEnc(
     auditorKey.pk.pkEnc,
     delegateServerKey.pk,
     ...[newOpen, '00', delegateServerKey.pk.ena],
 )
-const sn = mimc7.hash(
+let sn = mimc7.hash(
     acceptTradeSnarkInputs.cm_del_azeroth, 
     delegateServerKey.sk
 );
 
 
-const zklayKey = {
+let zklayKey = {
     auditor : {
         pk : auditorKey.pk.pkEnc,
     },
@@ -310,7 +310,7 @@ const zklayKey = {
     }
 }
 
-const ciphertexts = {
+let ciphertexts = {
     oldsCT: {
         r : "0",
         ct: "0"
@@ -319,12 +319,12 @@ const ciphertexts = {
     newpCT: newpCT,
 }
 
-const opens = {
+let opens = {
     oldOpen: acceptTradeSnarkInputs.o_del,
     newOpen: newOpen,
 };
 
-const balance = {
+let balance = {
     pocket: {
         privBal  : '00',
         pubInBal : '00',
@@ -333,20 +333,20 @@ const balance = {
     oldCmBal: oldCmBal,
 };
 
-const aux = {
+let aux = {
     newR: newR,
     newK: newK,
 };
 
-const commitments = {
+let commitments = {
     oldCm: acceptTradeSnarkInputs.cm_del_azeroth,
     newCm: mimc7.hash(newOpen, '00', delegateServerKey.pk.ena),
 };
 
-const oldRt = decStrToHex(await contracts.contractMethod.getRootTop().call());
-const intermediateHashes = await contracts.instance.methods.getMerklePath(cmDelIdx.toString()).call();
+let oldRt = decStrToHex(await contracts.contractMethod.getRootTop().call());
+let intermediateHashes = await contracts.instance.methods.getMerklePath(cmDelIdx.toString()).call();
 
-const mtData = mtree(oldRt, decArrToHexArr(intermediateHashes), cmDelIdx);
+let mtData = mtree(oldRt, decArrToHexArr(intermediateHashes), cmDelIdx);
 console.log("mtData : ", mtData)
 
 let tmp = acceptTradeSnarkInputs.cm_del_azeroth
@@ -358,7 +358,7 @@ console.log('calc root : ', tmp, )
 console.log("cm_azeroth_del : ", acceptTradeSnarkInputs.cm_del_azeroth)
 console.log('cm_azeroth_peer:  ', acceptTradeSnarkInputs.cm_peer_azeroth, '\n', mimc7.hash( acceptTradeSnarkInputs.cm_peer_azeroth), '\n\n\n')
 
-const zkTransferInput = new snarks.zkTransferInput(
+let zkTransferInput = new snarks.zkTransferInput(
     zklayKey,
     ciphertexts,
     mtData,
@@ -373,7 +373,7 @@ console.log(zkTransferInput.toSnarkInputFormat())
 
 snarks.zkTransferProver.uploadInputAndRunProof(zkTransferInput.toSnarkInputFormat(), '_' + zkTransferInput.commitments.oldCm);
 
-const zklayContractInput = zkTransferInput.toSnarkVerifyFormat(
+let zklayContractInput = zkTransferInput.toSnarkVerifyFormat(
     Ganache.getAddress(delegateServerIdx),
     ZERO_TOKEN_ADDRESS
 )
@@ -392,7 +392,114 @@ receipt = await sendTransaction(
 
 
 
+console.log('\n =================== WRITER ZKTRANSFER TEST =================== ')
+console.log(' WRITER SEND CM TO OWN EOA ')
+
+cmDelIdx = 1
+oldCmBal = BigInt('90000000000').toString(16)
+
+senc = new Encryption.symmetricKeyEncryption(writerKey.sk)
+let ENAWriterNew = senc.Enc('0x00')
+
+newOpen = math.randomFieldElement().toString(16)
+const [newpCT_, newR_, newK_] = penc.AzerothEnc(
+    auditorKey.pk.pkEnc,
+    writerKey.pk,
+    ...[newOpen, '00', writerKey.pk.ena],
+)
+
+newpCT = newpCT_
+newR   = newR_
+newK   = newK_
+
+sn = mimc7.hash(
+    acceptTradeSnarkInputs.cm_peer_azeroth,
+    writerKey.sk
+)
+
+zklayKey = {
+    auditor : {
+        pk : auditorKey.pk.pkEnc,
+    },
+    sender : {
+        pk : writerKey.pk,
+        sk : writerKey.sk,
+    },
+    receiver : {
+        pk : writerKey.pk,
+    }
+}
+
+ciphertexts = {
+    oldsCT: {
+        r : "0",
+        ct: "0"
+    },
+    newsCT : ENAWriterNew,
+    newpCT: newpCT,
+}
+
+opens = {
+    oldOpen: acceptTradeSnarkInputs.o_peer,
+    newOpen: newOpen,
+}
 
 
+balance = {
+    pocket : {
+        privBal  : '00',
+        pubInBal : '00',
+        pubOutBal: oldCmBal,
+    },
+    oldCmBal : oldCmBal,
+}
 
+aux = {
+    newR: newR,
+    newK: newK,
+}
 
+commitments = {
+    oldCm : acceptTradeSnarkInputs.cm_peer_azeroth,
+    newCm : mimc7.hash(newOpen, '00', writerKey.pk.ena),
+}
+
+oldRt = decStrToHex(await contracts.contractMethod.getRootTop().call());
+intermediateHashes = await contracts.instance.methods.getMerklePath(cmDelIdx.toString()).call();
+
+mtData = mtree(oldRt, decArrToHexArr(intermediateHashes), cmDelIdx);
+
+zkTransferInput = new snarks.zkTransferInput(
+    zklayKey,
+    ciphertexts,
+    mtData,
+    sn,
+    commitments,
+    opens,
+    balance,
+    aux,
+)
+
+snarks.zkTransferProver.uploadInputAndRunProof(
+    zkTransferInput.toSnarkInputFormat(), 
+    '_' + zkTransferInput.commitments.oldCm
+)
+
+zklayContractInput = zkTransferInput.toSnarkVerifyFormat(
+    Ganache.getAddress(writerIdx),
+    ZERO_TOKEN_ADDRESS
+)
+
+console.log("before balance : ", await web3.eth.getBalance(Ganache.getAddress(writerIdx)))
+
+receipt = await sendTransaction(
+    web3,
+    contracts.instance.methods.zkTransfer(
+        ... zklayContractInput
+    ),
+    '900000000',
+    Ganache.getAddress(writerIdx),
+    Ganache.getPrivateKey(writerIdx)
+)
+
+console.log("after balance : ", await web3.eth.getBalance(Ganache.getAddress(writerIdx)))
