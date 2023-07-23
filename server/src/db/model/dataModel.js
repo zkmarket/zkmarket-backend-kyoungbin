@@ -12,10 +12,10 @@ export default class dataDB extends DBinterface {
         author,
         pk_own,
         sk_enc,
+        addr_,
         eoa,
         h_k,
         h_ct,
-        h_data,
         enc_key,
         data_path,
         cover_path = '',
@@ -32,10 +32,10 @@ export default class dataDB extends DBinterface {
                     'eoa',
                     'h_k',
                     'h_ct',
-                    'h_data',
                     'enc_key',
                     'data_path',
                     'cover_path',
+                    'addr_'
                 ],
                 [
                     title,
@@ -46,10 +46,10 @@ export default class dataDB extends DBinterface {
                     eoa,
                     h_k,
                     h_ct,
-                    h_data,
                     enc_key,
                     data_path,
                     cover_path,
+                    addr_
                 ]
             );
             return true;

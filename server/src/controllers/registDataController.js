@@ -6,16 +6,22 @@ import db from "../db";
 import { getContractFormatProof, registDataInputJsonToContractFormat } from "../contracts/utils";
 import Config, { dbPath } from "../config";
 import { recoverAddr } from '../wallet/keyStruct';
-import { hexToInt } from '../utils/types';
+import types, { hexToInt } from '../utils/types';
 /**
  * 
  * body : {
- *  "data"      <-- utf8 데이터
- *  "pk_own"
- *  "sk_enc"
- *  "title"
- *  "desc"
- *  "author"
+ *  "data"      <-- utf8 데이터     proof
+ *  "addr_peer" <-- azerothENA 주소 proof
+ * 
+ *  "pk_own"    <-- register User / DB에 저장
+ *  "pk_enc"    <-- register User / DB에 저장
+ *  "eoa"       <-- 판매자 ETH 주소
+ * 
+ *  "sk_enc"    <-- DB에 저장해야함.
+ *  "title"     <-- DB에 저장해야함.
+ *  "desc"      <-- DB에 저장해야함.
+ *  "author"    <-- DB에 저장해야함.
+ *  "image"     <-- 처리 되있음
  * }
  */
 
@@ -25,37 +31,38 @@ import { hexToInt } from '../utils/types';
 const registDataController = async (req, res) => {
     try {
         console.log(req.body)
-        const addr = recoverAddr(req.body.pk_own, getPkEncX(req.body.pk_enc)); 
-        console.log("addr : ", addr);
-        const isRegistered = await contracts.tradeContract.isRegisteredUser(hexToInt(addr).toString())
-        console.log(isRegistered);
-
+        
+        const isRegistered = await contracts.tradeContract.isRegisteredUser(types.addPrefixAndPadHex(req.body.addr_peer))
         if(!isRegistered) {
-            const registUserReceipt = await contracts.tradeContract.registUser(
-                hexToInt(req.body.pk_own).toString(),
-                hexToInt(getPkEncX(req.body.pk_enc)).toString(),
-                req.body.eoa
-            )
-            console.log(registUserReceipt)
-            if(!_.get(registUserReceipt, 'status')) return res.send(false);
+            try {
+                const registUserReceipt = await contracts.tradeContract.zkMarketRegisterUser(
+                    req.body.addr_peer,
+                    req.body.pk_own,
+                    JSON.parse(req.body.pk_enc),
+                    req.body.eoa
+                )
+                console.log(registUserReceipt)
+                if(!_.get(registUserReceipt, 'status')) return res.send(false);
+            } catch (error) {
+                console.log(error)
+                return res.send(false);
+            }
         }
 
         const snarkInput = new snarks.registDataInput();
 
         snarkInput.uploadDataFromStr(req.body.data);
 
-        snarkInput.uploadPkOwn(req.body.pk_own);
+        snarkInput.uploadAddrPeer(req.body.addr_peer);
 
         snarkInput.encryptData();
 
         snarkInput.makeSnarkInput();
 
-        console.log(snarkInput.toSnarkInputFormat());
-
         snarks.registDataProver.uploadInputAndRunProof(snarkInput.toSnarkInputFormat(),'_'+snarkInput.gethCt());
 
         const contractFormatProof = getContractFormatProof(snarkInput.gethCt(), snarks.registDataProver.CircuitType)
-        const contractFormatInputs= registDataInputJsonToContractFormat(JSON.parse(snarkInput.toSnarkVerifyFormat()));
+        const contractFormatInputs= snarkInput.toSnarkVerifyFormat();
 
         const receipt = await contracts.tradeContract.registData(
             contractFormatProof,
@@ -72,10 +79,10 @@ const registDataController = async (req, res) => {
             req.body.author,
             req.body.pk_own,
             req.body.sk_enc,
+            req.body.addr_peer,
             req.body.eoa,
             snarkInput.gethK(),
             snarkInput.gethCt(),
-            snarkInput.getIdData(),
             snarkInput.getEncKey(),
             dbPath + 'data/' + snarkInput.gethCt() + '.json',
         )
@@ -85,7 +92,6 @@ const registDataController = async (req, res) => {
                 "ct_data" : JSON.parse(snarkInput.getsCtData()),
                 'enc_key' : snarkInput.getEncKey(),
                 'h_ct'  : snarkInput.gethCt(),
-                'h_data'  : snarkInput.getIdData(),
                 'data_path' : dbPath  + 'data/' + snarkInput.gethCt() + '.json',
                 'h_k'   : snarkInput.gethK(),
             }, 
@@ -103,6 +109,10 @@ const registDataController = async (req, res) => {
 
 const getPkEncX = (pk_enc) => {
     return JSON.parse(pk_enc)['x'];
+}
+
+const parseReq = (req) => {
+
 }
 
 export default registDataController;

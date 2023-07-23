@@ -1,5 +1,6 @@
-import _ from 'lodash'
 import fs from 'fs'
+import _ from 'lodash'
+import path from 'path'
 import Ganache from './ganahce'
 import Config from '../config'
 import { web3, ContractJson, ContractIns } from './web3'
@@ -21,13 +22,34 @@ export async function deploy(
     fromAddr,
     privKey,
 ) {
+    const testParameter = JSON.parse(
+        fs.readFileSync(
+            path.join(Config.homePath, 'src/test/testParameter.json'),
+            'utf-8'
+        )
+    )
 
+    const abi = JSON.parse(
+        fs.readFileSync(
+            path.join(Config.homePath, 'src/test/DataTradeContract/abi.json'),
+            'utf-8'
+        )
+    )
+    const bytecode = fs.readFileSync(path.join(Config.homePath, 'src/test/DataTradeContract/bytecode'), 'utf-8')
     const deployTx = ContractIns.deploy({
-        data : ContractJson.bytecode,
+        data : bytecode,
         arguments : [
-            getContractFormatVk('RegistData'), 
-            getContractFormatVk('GenTrade'),
-            getContractFormatVk('AcceptTrade')
+            // getContractFormatVk('RegistData'), 
+            // getContractFormatVk('GenTrade'),
+            // getContractFormatVk('AcceptTrade'),
+            testParameter.vk_registData,
+            testParameter.vk_genTrade,
+            testParameter.vk_acceptTrade,
+            32,
+            getContractFormatVk('ZKlay'),
+            testParameter.vk_nft,
+            web3.utils.toHex((0.00000 * web3.utils.unitMap.ether)),
+            fromAddr,
         ],
     })
 
@@ -38,10 +60,17 @@ export async function deploy(
     console.log(chainId)
 
     const createTransaction = await web3.eth.accounts.signTransaction({
+        to      : deployTx._parent._address,
         from    : `${fromAddr}`,
         data    : deployTx.encodeABI(),
-        gas     : await deployTx.estimateGas(),
-        gasPrice: '0x1',
+        gas     : '10000000' ,
+        nonce: '0x' + txCount.toString(16),
+        common: {
+            customChain: {
+                networkId: chainId,
+                chainId: chainId,
+            }
+        }
     },
     `${privKey}`
     );

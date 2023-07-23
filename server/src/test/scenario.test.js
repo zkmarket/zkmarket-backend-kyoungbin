@@ -13,6 +13,7 @@
  */
 
 import fs from 'fs'
+import _ from 'lodash'
 import Web3 from 'web3'
 import path from 'path'
 import Config from '../config'
@@ -49,7 +50,10 @@ const abi = JSON.parse(
         'utf-8'
     )
 )
-const bytecode = fs.readFileSync(path.join(Config.homePath, 'src/test/DataTradeContract/bytecode'), 'utf-8')
+const bytecode = fs.readFileSync(
+    path.join(Config.homePath, 'src/test/DataTradeContract/bytecode'), 
+    'utf-8'
+)
 
 const args = [
     testParameter.vk_registData,
@@ -68,7 +72,7 @@ const deployCall = new web3.eth.Contract(abi).deploy({
     arguments: args,
 });
 let receipt = await sendTransaction(
-    web3, deployCall, '10000000', 
+    web3, deployCall, '10000000' , 
     Ganache.getAddress(auditorIdx), 
     Ganache.getPrivateKey(auditorIdx)
 );
@@ -124,6 +128,7 @@ const azerothRegisterUser = async (addr, pkOwn, pkEnc, idx) => {
 console.log("register delegate server in Azeroth : ", (await azerothRegisterUser(delegateServerKey.pk.ena, delegateServerKey.pk.pkOwn, delegateServerKey.pk.pkEnc, delegateServerIdx)).status)
 console.log("register writer in Azeroth : ", (await azerothRegisterUser(writerKey.pk.ena, writerKey.pk.pkOwn, writerKey.pk.pkEnc, writerIdx)).status)
 console.log("register reader in Azeroth : ", (await azerothRegisterUser(readerKey.pk.ena, readerKey.pk.pkOwn, readerKey.pk.pkEnc, readerIdx)).status)
+
 
 
 
@@ -237,6 +242,74 @@ receipt = await sendTransaction(
 console.log("reader gen trade : ", receipt.status, "contract Balance : ", await web3.eth.getBalance(contractAddress))
 
 
+const parseTxLog = (receipt) => {
+    let tmp = []
+    let logs = _.get(receipt, 'logs') ?? receipt
+    console.log(logs[0].data)
+    for(let i=0; i<logs.length; i++){
+        tmp.push(parseData(logs[i].data))
+    }
+    return tmp
+}
+
+const parseData = (data) => {
+    let tmp = []
+    for(let i=0; i<Number.parseInt(data.length/64); i++){
+        tmp.push(data.slice(2+64*i, 2+64*(i+1)))
+    }
+    return tmp
+}
+
+const getEoaAddrFromReceipt = (receipt) => {
+    try {
+        const logs = parseTxLog(receipt)[0][0];
+        for(let i=0; i<logs.length; i++){
+            if(logs[i] != '0'){
+                return logs.slice(i);
+            }
+        }
+        return logs;
+    } catch (error) {
+        console.log(error)
+        return undefined
+    }
+}
+
+await web3.eth.getTransactionReceipt(_.get(receipt, 'transactionHash'), (err, txReceipt) => {
+    if(err){
+        console.log(err);
+        process.exit(1);
+    }
+
+    const logs = parseTxLog(txReceipt)[0]
+    console.log('logs : ', logs[0].slice(24))
+    try {
+        const penc = new Encryption.publicKeyEncryption()
+        const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = penc.Dec(
+            new Encryption.pCT(
+                logs[1],
+                logs[2],
+                logs.slice(3)
+            ),
+            writerKey.sk
+        )
+        console.log('msg : ', pk_enc_cons, r_cm, fee_peer, fee_del, h_k)
+        console.log("addr : ", getEoaAddrFromReceipt(receipt))
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+console.log(
+    [
+        genTradeSnarkInputs.pk_enc_cons,
+        genTradeSnarkInputs.r_cm,
+        genTradeSnarkInputs.fee_peer,
+        genTradeSnarkInputs.fee_del,
+        genTradeSnarkInputs.h_k
+    ]
+)
+process.exit(0)
 
 console.log('\n =================== ACCEPT TRADE =================== ')
 

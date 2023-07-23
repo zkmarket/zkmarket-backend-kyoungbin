@@ -29,7 +29,8 @@ CREATE TABLE data (
     title varchar(64) NOT NULL,
     descript text(1000),
     author varchar(32) NOT NULL,
-    pk_own varchar(64) NOT NULL,
+    pk_own varchar(64) ,
+    addr_ varchar(64) NOT NULL,
     sk_enc varchar(64) NOT NULL,
     eoa varchar(64) NOT NULL,
     h_k varchar(64) NOT NULL,
@@ -41,6 +42,7 @@ CREATE TABLE data (
     UNIQUE(h_data),
     PRIMARY KEY (data_idx)
 );
+
 
 
 -- default data 추가

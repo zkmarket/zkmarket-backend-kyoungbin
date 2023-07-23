@@ -19,7 +19,11 @@ let Config = {
     networkSelector : 0,
 
     testProvider    : 'http://127.0.0.1:8545',
-    testRPCprovider : '127.0.0.1:8545'
+    testRPCprovider : '127.0.0.1:8545',
+
+    AUDITOR_IDX : 0,
+    DELEGATE_SERVER_IDX : 1,
+
 }
 
 export const mysqlConfig = {

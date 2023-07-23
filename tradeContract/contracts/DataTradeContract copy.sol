@@ -14,11 +14,11 @@ contract DataTradeContract is ZklayBase {
         uint256 pk_own;
     }
 
-    // struct Order {
-    //     address orderer;
-    //     uint256 cm_pear;
-    //     uint256 cm_del;
-    // }
+    struct Order {
+        address orderer;
+        uint256 cm_pear;
+        uint256 cm_del;
+    }
 
     // h_ct list
     mapping(uint256 => bool) internal _hCT_list;
@@ -33,7 +33,7 @@ contract DataTradeContract is ZklayBase {
     mapping(uint256 => address) _eoaMap;
 
     // order number -> order
-    // mapping(bytes32 => Order) _order;
+    mapping(bytes32 => Order) _order;
 
     // to check trade
     mapping(uint256 => bool) waitTradeList;
@@ -141,16 +141,6 @@ contract DataTradeContract is ZklayBase {
         return _addr_list[addr];
     }
 
-    // function isRegisteredAzerothAddr(
-    //     uint256 addr
-    // )
-    //     public
-    //     view
-    //     returns (bool)
-    // {
-    //     return _addrList[addr];
-    // } 
-
     /*
         --- inputs ---
         0 : 1 
@@ -232,14 +222,14 @@ contract DataTradeContract is ZklayBase {
         require( Groth16AltBN128._verify(orderData_vk, proof, input_values), "invalid proof");
         
         // order number
-        // bytes32 orderNumber = MiMC7._hash(bytes32(inputs[3]), bytes32(inputs[4]));
-        // _order[orderNumber].orderer = msg.sender;
+        bytes32 orderNumber = MiMC7._hash(bytes32(inputs[3]), bytes32(inputs[4]));
+        _order[orderNumber].orderer = msg.sender;
 
         // insert cm to waitTradeList
         waitTradeList[inputs[3]] = true;
         waitTradeList[inputs[4]] = true;
-        // _order[orderNumber].cm_pear = inputs[3];
-        // _order[orderNumber].cm_del = inputs[4];
+        _order[orderNumber].cm_pear = inputs[3];
+        _order[orderNumber].cm_del = inputs[4];
         
         _ENA[tokenAddress][_addressMap[msg.sender].Addr] = ENA(inputs[7], inputs[8]);
 
@@ -258,21 +248,21 @@ contract DataTradeContract is ZklayBase {
         return true;
     }
 
-    // function cancelOrder(
-    //     bytes32 orderNumber
-    // )
-    //     public
-    //     returns (bool)
-    // {
-    //     require(_order[orderNumber].orderer == msg.sender,"Not match the orderer");
-    //     require(waitTradeList[_order[orderNumber].cm_pear] == true, "cm pear no exit");
-    //     require(waitTradeList[_order[orderNumber].cm_del] == true, "cm del no exit");
+    function cancelOrder(
+        bytes32 orderNumber
+    )
+        public
+        returns (bool)
+    {
+        require(_order[orderNumber].orderer == msg.sender,"Not match the orderer");
+        require(waitTradeList[_order[orderNumber].cm_pear] == true, "cm pear no exit");
+        require(waitTradeList[_order[orderNumber].cm_del] == true, "cm del no exit");
 
-    //     waitTradeList[_order[orderNumber].cm_pear] = false;
-    //     waitTradeList[_order[orderNumber].cm_del] = false;
+        waitTradeList[_order[orderNumber].cm_pear] = false;
+        waitTradeList[_order[orderNumber].cm_del] = false;
 
-    //     return true;
-    // }
+        return true;
+    }
 
     /**
         0 : 1
@@ -321,15 +311,15 @@ contract DataTradeContract is ZklayBase {
         return true;
     }
 
-    // function checkCmValidation(
-    //     bytes32 orderNumber
-    // )
-    //     public
-    //     view
-    //     returns (bool,bool)
-    // {
-    //     return (waitTradeList[_order[orderNumber].cm_pear], waitTradeList[_order[orderNumber].cm_del]);
-    // }
+    function checkCmValidation(
+        bytes32 orderNumber
+    )
+        public
+        view
+        returns (bool,bool)
+    {
+        return (waitTradeList[_order[orderNumber].cm_pear], waitTradeList[_order[orderNumber].cm_del]);
+    }
 
     function _hash(bytes32 left, bytes32 right)
         internal
