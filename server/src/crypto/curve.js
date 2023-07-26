@@ -29,6 +29,13 @@ class AffinePoint{
         return pointJson;
     }
 
+    toXYJson() {
+        return {
+            x : '0x' + this.x.toString(16),
+            y : '0x' + this.y.toString(16)
+        }
+    }
+
     toHexArray() {
         return [this.x.toString(16), this.y.toString(16)];
     }

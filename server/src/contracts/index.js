@@ -5,19 +5,20 @@ import Config from "../config";
 import wallet from "../wallet";
 import Ganache from "./ganahce";
 import { hexToInt,addPrefixHex } from "../utils/types";
+import UserKey from '../wallet/keyStruct';
 
 const contractAddress = await ganacheDeploy();
 console.log(contractAddress)
 const trade = new tradeContract(Config.testProvider, contractAddress);
 
-console.log("register auditor : ", 
+console.log("register auditor : \t\t\t", 
     _.get(
         await trade.azerothRegisterAuditor(wallet.auditorKey.pk.pkEnc)
         , 'status'
-        )
+    )
 )
 
-console.log("register azeroth delegate Server : ", 
+console.log("register azeroth delegate Server : \t", 
     _.get(
         await trade.azerothRegisterUser(
             wallet.delegateServerKey.pk.ena,
@@ -30,7 +31,21 @@ console.log("register azeroth delegate Server : ",
     )
 )
 
-console.log("register zkMarket delegate Server : ", 
+export const writerKeys = UserKey.keyGen();
+console.log("register azeroth TEST writer : \t\t", 
+    _.get(
+        await trade.azerothRegisterUser(
+            writerKeys.pk.ena,
+            writerKeys.pk.pkOwn,
+            writerKeys.pk.pkEnc,
+            Ganache.getAddress(Config.WRITER_IDX),
+            Ganache.getPrivateKey(Config.WRITER_IDX)
+        ),
+        'status'
+    )
+)
+
+console.log("register zkMarket delegate Server : \t", 
         _.get(
             await trade.zkMarketRegisterUser(
                 wallet.delegateServerKey.pk.ena,
@@ -42,6 +57,20 @@ console.log("register zkMarket delegate Server : ",
             'status'
         )
 )
+
+console.log("register zkMarket TEST writer : \t", 
+        _.get(
+            await trade.zkMarketRegisterUser(
+                writerKeys.pk.ena,
+                writerKeys.pk.pkOwn,
+                writerKeys.pk.pkEnc,
+                Ganache.getAddress(Config.WRITER_IDX),
+                Ganache.getPrivateKey(Config.WRITER_IDX)
+            ),
+            'status'
+        )
+)
+
 
 export default {
     tradeContract : trade

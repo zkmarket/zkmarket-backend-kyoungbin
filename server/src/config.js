@@ -23,7 +23,9 @@ let Config = {
 
     AUDITOR_IDX : 0,
     DELEGATE_SERVER_IDX : 1,
+    WRITER_IDX : 2,
 
+    ZERO_TOKEN_ADDRESS : '0x0000000000000000000000000000000000000000'
 }
 
 export const mysqlConfig = {

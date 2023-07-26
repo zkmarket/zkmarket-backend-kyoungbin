@@ -3,7 +3,6 @@ import UserKey from "./keyStruct";
 const delegateServerKey = UserKey.keyGen();
 const auditorKey = UserKey.keyGen();
 
-
 export default {
     auditorKey : auditorKey,
     delegateServerKey : delegateServerKey,

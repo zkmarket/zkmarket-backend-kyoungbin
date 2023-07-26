@@ -63,11 +63,11 @@ export default class tradeContract extends Web3Interface {
         eoa,
     )
     {   
-        console.log(
-            addPrefixHex(pkOwn),
-            addPrefixHex(pkEnc.x.toString(16)),
-            eoa
-        )
+        // console.log(
+        //     addPrefixHex(pkOwn),
+        //     addPrefixHex(pkEnc.x.toString(16)),
+        //     eoa
+        // )
         return await sendTransaction(
             this,
             this.instance.methods.registUserByDelegator(
