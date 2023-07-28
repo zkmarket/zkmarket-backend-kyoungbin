@@ -5,8 +5,8 @@ export async function sendTransaction(
     web3,
     call,
     gas ,
-    senderEthAddress = Ganache.getAddress(),
-    senderEthPrivateKey = Ganache.getPrivateKey(),
+    senderEthAddress,
+    senderEthPrivateKey,
     value = undefined
 ) {
     const txDesc = {

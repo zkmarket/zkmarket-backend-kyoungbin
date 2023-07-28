@@ -52,6 +52,7 @@ export default class dataDB extends DBinterface {
                     addr_
                 ]
             );
+            console.log("insertData ret : ", ret)
             return true;
         } catch (error) {
             console.log(error);
@@ -64,7 +65,7 @@ export default class dataDB extends DBinterface {
         value
     ) {
         try {
-            const ret = this.SELECT(
+            const ret = await this.SELECT(
                 ['*'],
                 this.tableName,
                 {
@@ -72,8 +73,24 @@ export default class dataDB extends DBinterface {
                     'value' : value
                 }
             )
+            if(ret[0].length == 0) return undefined;
+            return ret[0][0];
         } catch (error) {
-            console.log(error);
+            console.log("getDataInfo ERROR : ", error);
+            return undefined
+        }
+    }
+
+    async getAllDataInfo() {
+        try {
+            const ret = await this.SELECT(
+                ['*'],
+                this.tableName,
+            )
+            if(ret[0].length == 0) return undefined;
+            return ret[0];
+        } catch (error) {
+            console.log("getDataInfo ERROR : ", error);
             return undefined
         }
     }

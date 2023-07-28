@@ -59,19 +59,17 @@ const registDataController = async (req, res) => {
 
         snarkInput.makeSnarkInput();
 
-        snarks.registDataProver.uploadInputAndRunProof(snarkInput.toSnarkInputFormat(),'_'+snarkInput.gethCt());
+        await snarks.registDataProver.uploadInputAndRunProof(snarkInput.toSnarkInputFormat(),'_'+snarkInput.gethCt());
 
         const contractFormatProof = getContractFormatProof(snarkInput.gethCt(), snarks.registDataProver.CircuitType)
         const contractFormatInputs= snarkInput.toSnarkVerifyFormat();
-
+        console.log("")
         const receipt = await contracts.tradeContract.registData(
             contractFormatProof,
             contractFormatInputs,
         )
-
-        console.log(receipt);
         
-        console.log(req.body);
+        console.log(req.body, hexToInt(req.body.eoa).toString(16).toLocaleLowerCase());
         
         db.data.insertData(
             req.body.title,
@@ -80,11 +78,12 @@ const registDataController = async (req, res) => {
             req.body.pk_own,
             req.body.sk_enc,
             req.body.addr_peer,
-            req.body.eoa,
+            hexToInt(req.body.eoa).toString(16).toLocaleLowerCase(),
             snarkInput.gethK(),
             snarkInput.gethCt(),
             snarkInput.getEncKey(),
             dbPath + 'data/' + snarkInput.gethCt() + '.json',
+            req.body.filename ?? ''
         )
 
         let registerDataJson =  _.merge(

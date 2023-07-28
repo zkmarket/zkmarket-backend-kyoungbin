@@ -23,7 +23,7 @@ export class DBinterface {
         FROM = undefined,
         WHERE = undefined,
     )
-    {
+    {   
         let query = 'SELECT '
         
         for (let select of SELECT_LIST ){
@@ -33,10 +33,11 @@ export class DBinterface {
 
         if(FROM) { query += ' FROM ' + FROM; }
 
-        if(WHERE){query += ` WHERE ${_.get(WHERE, 'key')}=${_.get(WHERE, 'value')}`}
-
+        if(WHERE){ query += ` WHERE ${_.get(WHERE, 'key')}="${_.get(WHERE, 'value')}"`}
+        
         try {
             const ret = await this.connection.execute(query + ';');
+
             return ret
         } catch (error) {
             console.log(error);

@@ -8,16 +8,25 @@
  * 
  */
 
-import contracts from "../contracts";
+import _ from 'lodash'
+import contracts, { writerKeys } from "../contracts";
 import {sendTransaction, web3} from "../contracts/web3";
 import Encryption from "../crypto/encryption";
 import db from "../db";
 import snarks from "../snarks";
 import { addPrefixHex } from "../utils/types";
 import wallet from "../wallet";
+import { getDataEncKey } from './utilsController';
 
+/**
+ * 
+ * sk_enc
+ * txHash
+ * 
+ */
 const acceptTradeController = async (req, res) => {
     const txHash = req.body.txHash;
+    console.log("req.body : ", req.body)
 
     web3.eth.getTransactionReceipt(addPrefixHex(txHash), async (err, receipt) => {
         if(err) {
@@ -26,20 +35,37 @@ const acceptTradeController = async (req, res) => {
         }
 
         const eoaAddr = getEoaAddrFromReceipt(receipt);
-
-
-        const consumerInfo = db.data.getDataInfo(
+        console.log(eoaAddr.toLocaleLowerCase())
+        const consumerInfo = await db.data.getDataInfo(
             'eoa',
-            eoaAddr
+            eoaAddr.toLocaleLowerCase()
         )
+        
+        console.log("consumerInfo : ", consumerInfo)
 
-        const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, _.get(consumerInfo, 'sk_enc'));
+        // const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, _.get(consumerInfo, 'sk_enc'));
+        const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, writerKeys.sk);
 
+        
+        if(pk_enc_cons == undefined) return res.send(false);
+
+        // const acceptTradeSnarkInputs = new snarks.acceptTradeInput(
+        //     wallet.delegateServerKey.pk.ena,
+        //     _.get(consumerInfo, 'addr_'),
+        //     pk_enc_cons,
+        //     _.get(consumerInfo, 'enc_key'),
+        //     r_cm,
+        //     fee_peer,
+        //     fee_del
+        // )
+        
+
+        // below is to TEST
         const acceptTradeSnarkInputs = new snarks.acceptTradeInput(
-            wallet.pk.ena,
-            _.get(consumerInfo, 'addr_'),
+            wallet.delegateServerKey.pk.ena,
+            writerKeys.pk.ena,
             pk_enc_cons,
-            consumerInfo.enc_key,
+            getDataEncKey(),
             r_cm,
             fee_peer,
             fee_del
@@ -47,11 +73,13 @@ const acceptTradeController = async (req, res) => {
 
         snarks.acceptTradeProver.uploadInputAndRunProof(acceptTradeSnarkInputs.toSnarkInputFormat(), '_' + acceptTradeSnarkInputs.gethk());
         
-        const receipt = await contracts.tradeContract.acceptTrade(
-            h_k,
+        const acceptTradeReceipt = await contracts.tradeContract.acceptTrade(
+            acceptTradeSnarkInputs.gethk(),
             acceptTradeSnarkInputs
         )
-        console.log(receipt);
+        console.log(acceptTradeReceipt);
+
+        return res.send(true)
     })
 
 }
@@ -63,7 +91,9 @@ const acceptTradeController = async (req, res) => {
 // 3 : fee_del
 // 4 : h_k
 const getGenTradeMsgFromReceipt = (receipt, skEnc) => {
-
+    console.log(receipt),
+    console.log(parseTxLog(receipt), skEnc)
+    console.log(skEnc)
     try {
         const logs = parseTxLog(receipt)[0];
         const penc = new Encryption.publicKeyEncryption();
@@ -75,10 +105,11 @@ const getGenTradeMsgFromReceipt = (receipt, skEnc) => {
             ),
             skEnc
         )
+        console.log('msg : ', msg)
         return msg;
     } catch (error) {
         console.log(error);
-        return undefined
+        return [undefined, undefined, undefined, undefined, undefined]
     }
 }
 

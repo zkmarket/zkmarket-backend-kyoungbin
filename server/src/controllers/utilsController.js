@@ -5,18 +5,23 @@ import web3 from "../contracts/web3"
 import snarks from "../snarks"
 import wallet from "../wallet"
 
+export const TEST_DATA = '123 123\n fds fds \n';
+
+let DATA_ENC_KEY = undefined;
+
 export const getContractAddressController = (req, res) => {
     console.log('getContractAddressController : ', contracts.tradeContract.instance.options.address)
     res.send(contracts.tradeContract.instance.options.address)
 }
 
+
 export const getExampleGenTradeParamsController = async (req, res) => {
-    const data = '123 123\n fds fds \n'
+    
     
     // to make GenTrade parameters
     const RegisterDataSnarkInputs = new snarks.registDataInput();
 
-    RegisterDataSnarkInputs.uploadDataFromStr(data);
+    RegisterDataSnarkInputs.uploadDataFromStr(TEST_DATA);
 
     RegisterDataSnarkInputs.uploadAddrPeer(writerKeys.pk.ena);
 
@@ -24,9 +29,11 @@ export const getExampleGenTradeParamsController = async (req, res) => {
 
     RegisterDataSnarkInputs.makeSnarkInput();
 
-    const hK = RegisterDataSnarkInputs.gethCt();
+    const hK = RegisterDataSnarkInputs.gethK();
     const addrPeer = writerKeys.pk.ena;
     const pkEnc = writerKeys.pk.pkEnc;
+
+    DATA_ENC_KEY = RegisterDataSnarkInputs.getEncKey();
 
     console.log(hK, addrPeer, pkEnc)
 
@@ -42,7 +49,12 @@ export const getExampleGenTradeParamsController = async (req, res) => {
     })
 }
 
+export function getDataEncKey (){
+    return DATA_ENC_KEY;
+}
+
 export default {
     getContractAddressController,
-    getExampleGenTradeParamsController
+    getExampleGenTradeParamsController,
+    getDataEncKey
 }

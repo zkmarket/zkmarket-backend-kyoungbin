@@ -151,7 +151,7 @@ export default class tradeContract extends Web3Interface {
         return await sendTransaction(
             this,
             this.instance.methods.acceptOrder(
-                getContractFormatProof(h_k, snarkInput.CircuitType),
+                getContractFormatProof(h_k, 'AcceptTrade'),
                 snarkInput.toSnarkVerifyFormat()
             ),
             '100000000',

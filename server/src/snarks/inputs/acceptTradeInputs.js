@@ -71,7 +71,7 @@ export default class AcceptTradeSnarkInputs{
     
     toSnarkInputFormat(){
         const tmp = JSON.parse(this.toJson())
-        return JSON.stringify(_.omit(tmp, ['o_peer', 'o_del']))
+        return JSON.stringify(_.omit(tmp, ['o_peer', 'o_del']), null, 2)
         // return this.toJson();
     }
 

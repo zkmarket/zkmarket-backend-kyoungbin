@@ -116,6 +116,7 @@ function load_vk_json(contextId, vk_json_name){
 
 function write_proof_json(contextId, proof_json_name){
     const proof_json = SnarkLib.serializeProof(contextId);
+    console.log(proof_json_name, proof_json)
     write_text_to_file(proof_json_name, proof_json);
 }
 
