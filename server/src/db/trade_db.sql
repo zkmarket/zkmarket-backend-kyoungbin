@@ -22,6 +22,7 @@ USE trade_db;
 -- 원래 user에 추가해야함.
 -- UNIQUE (eoa_addr)
 
+-- 구매기록  
 
 DROP TABLE IF EXISTS data;
 CREATE TABLE data (
@@ -32,10 +33,12 @@ CREATE TABLE data (
     pk_own varchar(64) ,
     addr_ varchar(64) NOT NULL,
     sk_enc varchar(64) NOT NULL,
+    pk_enc varchar(64) ,
     eoa varchar(64) NOT NULL,
     h_k varchar(64) NOT NULL,
     h_ct varchar(64) NOT NULL,
     h_data varchar(64),
+    fee varchar(64) NOT NULL,
     enc_key varchar(64) NOT NULL,
     data_path varchar(255) NOT NULL,
     cover_path varchar(255),

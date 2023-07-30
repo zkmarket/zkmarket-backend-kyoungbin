@@ -7,6 +7,7 @@ import { getContractFormatProof, registDataInputJsonToContractFormat } from "../
 import Config, { dbPath } from "../config";
 import { recoverAddr } from '../wallet/keyStruct';
 import types, { hexToInt } from '../utils/types';
+import web3 from '../contracts';
 /**
  * 
  * body : {
@@ -64,23 +65,29 @@ const registDataController = async (req, res) => {
         const contractFormatProof = getContractFormatProof(snarkInput.gethCt(), snarks.registDataProver.CircuitType)
         const contractFormatInputs= snarkInput.toSnarkVerifyFormat();
         console.log("")
-        const receipt = await contracts.tradeContract.registData(
-            contractFormatProof,
-            contractFormatInputs,
-        )
+        
+        try {
+            await sendRegisterDataTx(contractFormatProof, contractFormatInputs)
+        } catch (error) {
+            console.log(error)
+            return res.send(false);
+        }
         
         console.log(req.body, hexToInt(req.body.eoa).toString(16).toLocaleLowerCase());
         
+        let pkEnc = JSON.parse(req.body.pk_enc);
         db.data.insertData(
             req.body.title,
             req.body.desc,
             req.body.author,
             req.body.pk_own,
             req.body.sk_enc,
+            _.get(pkEnc, 'x'),
             req.body.addr_peer,
             hexToInt(req.body.eoa).toString(16).toLocaleLowerCase(),
             snarkInput.gethK(),
             snarkInput.gethCt(),
+            web3.tradeContract.utils.toWei( req.body.fee ),
             snarkInput.getEncKey(),
             dbPath + 'data/' + snarkInput.gethCt() + '.json',
             req.body.filename ?? ''
@@ -105,6 +112,18 @@ const registDataController = async (req, res) => {
     }
     
 }
+
+const sendRegisterDataTx = async (proof, inputs) =>{
+    try {
+        const receipt = await contracts.tradeContract.registData(
+            proof,
+            inputs,
+        )
+        return _.get(receipt, 'status');
+    } catch (error) {
+        return undefined;
+    }
+} 
 
 const getPkEncX = (pk_enc) => {
     return JSON.parse(pk_enc)['x'];

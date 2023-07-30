@@ -43,34 +43,44 @@ const acceptTradeController = async (req, res) => {
         
         console.log("consumerInfo : ", consumerInfo)
 
-        // const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, _.get(consumerInfo, 'sk_enc'));
-        const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, writerKeys.sk);
+        const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, _.get(consumerInfo, 'sk_enc'));
+        // const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, writerKeys.sk);
 
         
         if(pk_enc_cons == undefined) return res.send(false);
 
-        // const acceptTradeSnarkInputs = new snarks.acceptTradeInput(
-        //     wallet.delegateServerKey.pk.ena,
-        //     _.get(consumerInfo, 'addr_'),
-        //     pk_enc_cons,
-        //     _.get(consumerInfo, 'enc_key'),
-        //     r_cm,
-        //     fee_peer,
-        //     fee_del
-        // )
-        
-
-        // below is to TEST
-        const acceptTradeSnarkInputs = new snarks.acceptTradeInput(
+        console.log(
             wallet.delegateServerKey.pk.ena,
-            writerKeys.pk.ena,
+            _.get(consumerInfo, 'addr_'),
             pk_enc_cons,
-            getDataEncKey(),
+            _.get(consumerInfo, 'enc_key'),
             r_cm,
             fee_peer,
             fee_del
         )
 
+        const acceptTradeSnarkInputs = new snarks.acceptTradeInput(
+            wallet.delegateServerKey.pk.ena,
+            _.get(consumerInfo, 'addr_'),
+            pk_enc_cons,
+            _.get(consumerInfo, 'enc_key'),
+            r_cm,
+            fee_peer,
+            fee_del
+        )
+        console.log('accept Trade input : ', acceptTradeSnarkInputs.toSnarkInputFormat())
+
+        // below is to TEST
+        // const acceptTradeSnarkInputs = new snarks.acceptTradeInput(
+        //     wallet.delegateServerKey.pk.ena,
+        //     writerKeys.pk.ena,
+        //     pk_enc_cons,
+        //     getDataEncKey(),
+        //     r_cm,
+        //     fee_peer,
+        //     fee_del
+        // )
+        
         snarks.acceptTradeProver.uploadInputAndRunProof(acceptTradeSnarkInputs.toSnarkInputFormat(), '_' + acceptTradeSnarkInputs.gethk());
         
         const acceptTradeReceipt = await contracts.tradeContract.acceptTrade(

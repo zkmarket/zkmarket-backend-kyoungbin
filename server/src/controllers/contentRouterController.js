@@ -17,7 +17,8 @@ export const getContentListController = async (req, res) => {
     console.log("getContentListController")
 
     const dataInfoList = await db.data.getAllDataInfo();
-    console.log(dataInfoList);
+    if(dataInfoList == undefined) return res.send([]);
+    console.log('dataInfoList : ', dataInfoList);
 
     // const formData = new FormData();
     const contentList = []
@@ -36,17 +37,16 @@ export const getImgController = async (req, res) => {
 }
 
 const toFrontFormat = (data) => {
-    let form = {}
     return {
         title : _.get(data, 'title'),
         description : _.get(data, 'descript'),
         addrPeer : _.get(data, 'addr_'),
         addrDel  : wallet.delegateServerKey.pk.ena,
+        pkEnc : _.get(data, 'pk_enc'),
         author : _.get(data, 'author'),
         hK : _.get(data, 'h_k'),
         img_path : 'http://127.0.0.1:10801/content/img/' + _.get(data, 'cover_path'),
-        fee : web3.web3.utils.toWei('1', 'ether'),
-        
+        fee : _.get(data, 'fee'),
     }
 }
 
