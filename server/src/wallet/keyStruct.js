@@ -82,7 +82,7 @@ export default class UserKey {
         const mimc7 = new mimc.MiMC7();
 
         const skBigIntType = types.hexToInt(sk);
-        console.log(skBigIntType, skBigIntType.toString(16))
+        // console.log(skBigIntType, skBigIntType.toString(16))
         const userPublicKey = {
             ena: null,
             pkOwn: mimc7.hash(skBigIntType.toString(16)),
@@ -94,7 +94,7 @@ export default class UserKey {
             userPublicKey.pkEnc.y.toString(16)
         );
 
-        return new upk(userPublicKey);
+        return userPublicKey;
     }
 }
 
