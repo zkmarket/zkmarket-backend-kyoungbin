@@ -17,6 +17,7 @@ import snarks from "../snarks";
 import { addPrefixHex } from "../utils/types";
 import wallet from "../wallet";
 import { getDataEncKey } from './utilsController';
+import { generateNotesFromAcceptInput } from '../snarks/note';
 
 /**
  * 
@@ -33,6 +34,7 @@ const acceptTradeController = async (req, res) => {
             console.log(err);
             return res.send(false);
         }
+        if(_.get(receipt, 'status') == false){ return res.send(false) }
 
         const eoaAddr = getEoaAddrFromReceipt(receipt);
         console.log(eoaAddr.toLocaleLowerCase())
@@ -88,7 +90,20 @@ const acceptTradeController = async (req, res) => {
             acceptTradeSnarkInputs
         )
         console.log(acceptTradeReceipt);
+        
+        console.log('parseTxLog(acceptTradeReceipt) : ', parseTxLog(acceptTradeReceipt))
 
+        const notes = generateNotesFromAcceptInput(
+            acceptTradeSnarkInputs,
+            parseTxLog(acceptTradeReceipt)[0],
+            _.get(consumerInfo, 'sk_enc').toLocaleLowerCase()
+        )
+
+        console.log('notes : ', notes)
+
+        db.note.INSER_NOTES(...notes)
+
+        console.log('notes : ', await db.note.SELECT_NOTE_UNREAD())
         return res.send(true)
     })
 

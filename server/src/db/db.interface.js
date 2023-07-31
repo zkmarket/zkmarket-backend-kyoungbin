@@ -84,6 +84,42 @@ export class DBinterface {
     async DELETE(){
         // 필요하면 구현
     }
+
+    async UPDATE(
+        TABLE_NAME,
+        SET_KEY,
+        SET_VALUE,
+        WHERE_KEY,
+        WHERE_VALUE
+    ) {
+        if(SET_KEY.length != SET_VALUE.length){
+            throw new Error('SET key length, SET value length err');
+        }
+
+        let query = 'UPDATE ' + TABLE_NAME + ' SET ';
+        for (let i = 0; i < SET_KEY.length; i++) {
+            query += SET_KEY[i] + ' = ?,';
+        }
+        query = query.slice(0, query.length - 1);
+
+
+        query += ' WHERE ';
+        for (let i = 0; i < WHERE_KEY.length; i++) {
+            query += WHERE_KEY[i] + ' = ?,';
+        }
+        query = query.slice(0, query.length - 1);
+
+        let values = SET_VALUE
+        values.push(...WHERE_VALUE)
+
+        try {
+            const ret = await this.connection.execute(query+';', values);
+            return ret;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
 }
 
 export default DBinterface;

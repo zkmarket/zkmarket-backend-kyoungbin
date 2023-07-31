@@ -40,9 +40,9 @@ console.log("register azeroth delegate Server : \t",
 console.log("register azeroth TEST writer : \t\t", 
     _.get(
         await trade.azerothRegisterUser(
-            writerKeys.pk.ena,
-            writerKeys.pk.pkOwn,
-            writerKeys.pk.pkEnc,
+            writerKey.pk.ena,
+            writerKey.pk.pkOwn,
+            writerKey.pk.pkEnc,
             Ganache.getAddress(Config.WRITER_IDX),
             Ganache.getPrivateKey(Config.WRITER_IDX)
         ),
@@ -66,9 +66,9 @@ console.log("register zkMarket delegate Server : \t",
 console.log("register zkMarket TEST writer : \t", 
         _.get(
             await trade.zkMarketRegisterUser(
-                writerKeys.pk.ena,
-                writerKeys.pk.pkOwn,
-                writerKeys.pk.pkEnc,
+                writerKey.pk.ena,
+                writerKey.pk.pkOwn,
+                writerKey.pk.pkEnc,
                 Ganache.getAddress(Config.WRITER_IDX),
                 Ganache.getPrivateKey(Config.WRITER_IDX)
             ),

@@ -46,6 +46,27 @@ CREATE TABLE data (
     PRIMARY KEY (data_idx)
 );
 
+--                 note_idx,
+--                 open_key,
+--                 bal,
+--                 user_addr,
+--                 cm,
+--                 tokenAddress,
+--                 type,
+--                 sk_enc : 누구 것인지 식별하기 위해서
+DROP TABLE IF EXISTS notes;
+CREATE TABLE notes (
+    note_idx varchar(64) UNIQUE NOT NULL,
+    sk_enc varchar(64) NOT NULL,
+    open_key varchar(64) NOT NULL,
+    user_addr varchar(64) NOT NULL,
+    bal varchar(64) NOT NULL,
+    cm varchar(64)  NOT NULL,
+    tokenAddress varchar(64) NOT NULL,
+    is_read INT(1)
+);
+
+
 
 
 -- default data 추가

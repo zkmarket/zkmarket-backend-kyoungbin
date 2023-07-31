@@ -1,7 +1,9 @@
+import _ from 'lodash'
 import Config from "../config"
 import contracts, { writerKeys } from "../contracts"
 import Ganache from "../contracts/ganahce"
 import web3 from "../contracts/web3"
+import db from "../db"
 import snarks from "../snarks"
 import wallet from "../wallet"
 
@@ -49,9 +51,20 @@ export const getExampleGenTradeParamsController = async (req, res) => {
     })
 }
 
+export const getNotesController = async (req, res) => {
+    console.log(req.param, req.params)
+    if(_.get(req.params, 'sk_enc') == undefined) return res.send([])
+
+    const notes = await db.note.SELECT_NOTE_UNREAD_AND_UPDATEr((_.get(req.params, 'sk_enc')).toLocaleLowerCase());
+
+    return res.send(notes);
+}
+
 export function getDataEncKey (){
     return DATA_ENC_KEY;
 }
+
+
 
 export default {
     getContractAddressController,
