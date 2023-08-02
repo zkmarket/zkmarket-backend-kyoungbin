@@ -49,7 +49,7 @@ export default class dataDB extends DBinterface {
                     sk_enc,
                     pk_enc,
                     eoa,
-                    h_k,
+                    h_k.toLocaleLowerCase(),
                     h_ct,
                     fee,
                     enc_key,
@@ -79,6 +79,8 @@ export default class dataDB extends DBinterface {
                     'value' : value
                 }
             )
+            console.log("getDataInfo ret : ", ret[0])
+
             if(ret[0].length == 0) return undefined;
             return ret[0][0];
         } catch (error) {
@@ -95,6 +97,24 @@ export default class dataDB extends DBinterface {
             )
             if(ret[0].length == 0) return undefined;
             return ret[0];
+        } catch (error) {
+            console.log("getDataInfo ERROR : ", error);
+            return undefined
+        }
+    }
+
+    async getDataPath(h_k) {
+        try {
+            const ret = await this.SELECT(
+                ['data_path'],
+                this.tableName,
+                {
+                    key:'h_k',
+                    value: h_k 
+                }
+            )
+            if(ret[0].length == 0) return undefined;
+            return ret[0][0];
         } catch (error) {
             console.log("getDataInfo ERROR : ", error);
             return undefined

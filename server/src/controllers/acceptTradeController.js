@@ -18,6 +18,7 @@ import { addPrefixHex } from "../utils/types";
 import wallet from "../wallet";
 import { getDataEncKey } from './utilsController';
 import { generateNotesFromAcceptInput } from '../snarks/note';
+import { toFrontFormat } from './contentRouterController';
 
 /**
  * 
@@ -28,7 +29,7 @@ import { generateNotesFromAcceptInput } from '../snarks/note';
 const acceptTradeController = async (req, res) => {
     const txHash = req.body.txHash;
     console.log("req.body : ", req.body)
-
+    
     web3.eth.getTransactionReceipt(addPrefixHex(txHash), async (err, receipt) => {
         if(err) {
             console.log(err);
@@ -36,16 +37,21 @@ const acceptTradeController = async (req, res) => {
         }
         if(_.get(receipt, 'status') == false){ return res.send(false) }
 
+        const hK = _.get(req.body,'hK')
+        if( hK == undefined)  return res.send(false);
+
         const eoaAddr = getEoaAddrFromReceipt(receipt);
-        console.log(eoaAddr.toLocaleLowerCase())
-        const consumerInfo = await db.data.getDataInfo(
-            'eoa',
-            eoaAddr.toLocaleLowerCase()
+
+        console.log("all data : ", await db.data.getAllDataInfo())
+        console.log("eoaAddr : ", eoaAddr.toLocaleLowerCase())
+        const writerInfo = await db.data.getDataInfo(
+            'h_k',
+            hK.toLocaleLowerCase()
         )
         
-        console.log("consumerInfo : ", consumerInfo)
+        console.log("consumerInfo : ", writerInfo)
 
-        const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, _.get(consumerInfo, 'sk_enc'));
+        const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, _.get(writerInfo, 'sk_enc'));
         // const [pk_enc_cons, r_cm, fee_peer, fee_del, h_k] = getGenTradeMsgFromReceipt(receipt, writerKeys.sk);
 
         
@@ -53,9 +59,9 @@ const acceptTradeController = async (req, res) => {
 
         console.log(
             wallet.delegateServerKey.pk.ena,
-            _.get(consumerInfo, 'addr_'),
+            _.get(writerInfo, 'addr_'),
             pk_enc_cons,
-            _.get(consumerInfo, 'enc_key'),
+            _.get(writerInfo, 'enc_key'),
             r_cm,
             fee_peer,
             fee_del
@@ -63,9 +69,9 @@ const acceptTradeController = async (req, res) => {
 
         const acceptTradeSnarkInputs = new snarks.acceptTradeInput(
             wallet.delegateServerKey.pk.ena,
-            _.get(consumerInfo, 'addr_'),
+            _.get(writerInfo, 'addr_'),
             pk_enc_cons,
-            _.get(consumerInfo, 'enc_key'),
+            _.get(writerInfo, 'enc_key'),
             r_cm,
             fee_peer,
             fee_del
@@ -93,10 +99,13 @@ const acceptTradeController = async (req, res) => {
         
         console.log('parseTxLog(acceptTradeReceipt) : ', parseTxLog(acceptTradeReceipt))
 
+
+        // update note DB
+
         const notes = generateNotesFromAcceptInput(
             acceptTradeSnarkInputs,
             parseTxLog(acceptTradeReceipt)[0],
-            _.get(consumerInfo, 'sk_enc').toLocaleLowerCase()
+            _.get(writerInfo, 'sk_enc').toLocaleLowerCase()
         )
 
         console.log('notes : ', notes)
@@ -104,7 +113,24 @@ const acceptTradeController = async (req, res) => {
         db.note.INSER_NOTES(...notes)
 
         console.log('notes : ', await db.note.SELECT_NOTE_UNREAD())
-        return res.send(true)
+
+
+        // update trade LOG DB
+
+        db.trade.INSERT_TRADE({
+            buyer_addr : eoaAddr.toLocaleLowerCase(),
+            // buyer_sk : _.get(writerInfo, 'sk_enc'),
+            buyer_pk : pk_enc_cons.toLocaleLowerCase(),
+            title : _.get(writerInfo, 'title'),
+            h_k : h_k.toLocaleLowerCase(),
+        })
+
+        const textInfo = await db.data.getDataInfo(
+            'h_k',
+            h_k
+        )
+        console.log(textInfo)
+        return res.send(toFrontFormat(textInfo))
     })
 
 }

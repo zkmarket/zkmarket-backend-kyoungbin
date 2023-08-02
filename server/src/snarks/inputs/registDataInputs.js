@@ -87,7 +87,7 @@ export default class RegistDataSnarkInputs {
             this.data       == null
         ){ throw new Error("data is not prepared"); }
         const mimc7 = new mimc.MiMC7();
-        this.h_k    = mimc7.hash(this.addr_peer, this.dataEncKey);
+        this.h_k    = mimc7.hash(this.addr_peer, this.dataEncKey).toLocaleLowerCase();
         this.h_ct   = this.hashArr(this.CT_data);
     }
 
@@ -104,7 +104,7 @@ export default class RegistDataSnarkInputs {
     }
     
     gethK(){
-        return this.h_k;
+        return this.h_k.toLocaleLowerCase();
     }
     
     toSnarkInputFormat(){

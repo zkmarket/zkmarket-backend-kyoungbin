@@ -1,4 +1,5 @@
 import _ from "lodash";
+import fs from 'fs';
 import db from "../db";
 import web3 from "../contracts/web3";
 import wallet from "../wallet";
@@ -14,11 +15,27 @@ import Config, { dbPath } from "../config";
             feePeer 
 */
 export const getContentListController = async (req, res) => {
-    console.log("getContentListController")
+    console.log('getContentListController')
+    console.log(req.query)
 
-    const dataInfoList = await db.data.getAllDataInfo();
+    const sk_enc = _.get(req.query, 'sk_enc');
+    const pk_enc = _.get(req.query, 'pk_enc');
+    
+    let dataInfoList = []
+    if(pk_enc == undefined) {  dataInfoList = await db.data.getAllDataInfo(); }
+    else {
+        for (const[i,e] of (await db.trade.SELECT_TRADE({buyer_pk : pk_enc})).entries()){
+            dataInfoList.push(
+                await db.data.getDataInfo(
+                    'h_k',
+                    _.get(e, 'h_k')
+                )
+            )
+        }
+    }
+
     if(dataInfoList == undefined) return res.send([]);
-    console.log('dataInfoList : ', dataInfoList);
+    // console.log('dataInfoList : ', dataInfoList);
 
     // const formData = new FormData();
     const contentList = []
@@ -36,7 +53,34 @@ export const getImgController = async (req, res) => {
     res.sendFile(filePath)
 }
 
-const toFrontFormat = (data) => {
+export const getDataController = async (req, res) => {
+    console.log('getDataController')
+    console.log(req.params)
+
+    const flag = await db.trade.IS_VALID_TRADE(
+        {
+            h_k : _.get(req.params, 'h_k'), 
+            pk_enc : _.get(req.params, 'pk_enc')
+        }
+    )
+    console.log(flag)
+
+    const dataPath =_.get((await db.data.getDataPath(_.get(req.params, 'h_k'))), 'data_path')
+    console.log(dataPath, flag)
+    
+    if(dataPath && flag){
+        const fileData = fs.readFileSync(
+            dataPath, 'utf-8'
+        )
+        console.log(_.get(JSON.parse(fileData), 'text'))
+        return res.send(fileData)
+    }
+
+    res.send('');
+}
+
+export const toFrontFormat = (data) => {
+    if(data == undefined) return '';
     return {
         title : _.get(data, 'title'),
         description : _.get(data, 'descript'),

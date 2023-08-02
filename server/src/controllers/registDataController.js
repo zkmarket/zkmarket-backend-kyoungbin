@@ -60,9 +60,9 @@ const registDataController = async (req, res) => {
 
         snarkInput.makeSnarkInput();
 
-        await snarks.registDataProver.uploadInputAndRunProof(snarkInput.toSnarkInputFormat(),'_'+snarkInput.gethCt());
+        await snarks.registDataProver.uploadInputAndRunProof(snarkInput.toSnarkInputFormat(),'_'+snarkInput.gethK());
 
-        const contractFormatProof = getContractFormatProof(snarkInput.gethCt(), snarks.registDataProver.CircuitType)
+        const contractFormatProof = getContractFormatProof(snarkInput.gethK(), snarks.registDataProver.CircuitType)
         const contractFormatInputs= snarkInput.toSnarkVerifyFormat();
         console.log("")
         
@@ -89,21 +89,22 @@ const registDataController = async (req, res) => {
             snarkInput.gethCt(),
             web3.tradeContract.utils.toWei( req.body.fee ),
             snarkInput.getEncKey(),
-            dbPath + 'data/' + snarkInput.gethCt() + '.json',
+            dbPath + 'data/' + snarkInput.gethK() + '.json',
             req.body.filename ?? ''
         )
 
         let registerDataJson =  _.merge(
-            {
+            {   
+                "text" : req.body.data,
                 "ct_data" : JSON.parse(snarkInput.getsCtData()),
                 'enc_key' : snarkInput.getEncKey(),
                 'h_ct'  : snarkInput.gethCt(),
-                'data_path' : dbPath  + 'data/' + snarkInput.gethCt() + '.json',
+                'data_path' : dbPath  + 'data/' + snarkInput.gethK() + '.json',
                 'h_k'   : snarkInput.gethK(),
             }, 
         req.body)
 
-        fs.writeFileSync(dbPath + 'data/' + snarkInput.gethCt() + '.json', JSON.stringify(registerDataJson));
+        fs.writeFileSync(dbPath + 'data/' + snarkInput.gethK().toLocaleLowerCase() + '.json', JSON.stringify(registerDataJson));
 
         res.send(true);
     } catch (error) {

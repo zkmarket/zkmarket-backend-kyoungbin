@@ -66,7 +66,14 @@ CREATE TABLE notes (
     is_read INT(1)
 );
 
-
+DROP TABLE IF EXISTS trade;
+CREATE TABLE trade (
+    buyer_addr varchar(64) NOT NULL,
+    buyer_sk varchar(64),
+    buyer_pk varchar(64),
+    title varchar(64) NOT NULL,
+    h_k varchar(64) NOT NULL
+);
 
 
 -- default data 추가
