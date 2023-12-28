@@ -31,7 +31,7 @@ import web3 from '../contracts';
 // 3. db에 저장
 const registDataController = async (req, res) => {
     try {
-        console.log(req.body)
+        console.log("req.bod : ", req.body)
         
         const isRegistered = await contracts.tradeContract.isRegisteredUser(types.addPrefixAndPadHex(req.body.addr_peer))
         if(!isRegistered) {
